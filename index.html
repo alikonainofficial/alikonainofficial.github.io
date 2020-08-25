@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Ali</title>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="index.js" type="text/javascript"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather&family=Montserrat&family=Sacramento&display=swap" rel="stylesheet">
+
+    <script src="https://use.fontawesome.com/releases/v5.14.0/js/all.js" data-auto-replace-svg></script>
+  </head>
+  <body>
+    <div class="top-container">
+      <img class="top-cloud" src="images/cloud.png" alt="cloud-img">
+      <h1>I'm Ali.</h1>
+      <h2 style="font-weight:normal;">a <u>pro</u>grammer.</h2>
+      <img class="bottom-cloud" src="images/cloud.png" alt="cloud-img">
+      <img src="images/mountain.png" alt="mountain-img">
+    </div>
+    <div class="middle-container">
+      <div class="profile">
+        <button id="video-button" value="" type="button"><img id="profile-image" class="profile-img" src="images/flowey.png" alt="profile-img"></button>
+        <h2 id="title-greeting">Hello.</h2>
+        <p class="intro">I am a Web Application and a Full Stack Developer.
+          I got interested in computers when I was 12 years old.
+          I used to tinker around with different softwares while trying to play games
+          and that turned into a seed for growing my interest in computer programming.
+          Also, whatever you do, DO NOT click my profile picture above. I repeat, DO NOT click the flower image.
+        </p>
+      </div>
+      <hr>
+      <div class="skills">
+        <h2>My Skills.</h2>
+        <div class="skill-row">
+          <img class="code-img" src="images/computer.png" alt="skills-img">
+          <h3>Web Developer</h3>
+          <p>I have worked on several web based projects in Python using Django framework and I have a substantial experience in building full fledged web applications based on JavaScript using Nodejs framework.</p>
+        </div>
+        <div class="skill-row">
+          <img class="leisure-img" src="images/leisure.png" alt="chillie-img">
+          <h3>Gamer</h3>
+          <p>I also play a lot of games in my free hours. More specifically, I enjoy playing racing games such as Asphalt 8 or indie games such as Celeste.</p>
+        </div>
+      </div>
+      <hr>
+
+      <h2>My Works.</h2>
+      <div class="container">
+        <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+          <ol class="carousel-indicators">
+            <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+            <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
+            <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
+            <li data-target="#carouselExampleIndicators" data-slide-to="3"></li>
+            <li data-target="#carouselExampleIndicators" data-slide-to="4"></li>
+            <li data-target="#carouselExampleIndicators" data-slide-to="5"></li>
+            <li data-target="#carouselExampleIndicators" data-slide-to="6"></li>
+            <li data-target="#carouselExampleIndicators" data-slide-to="7"></li>
+            <li data-target="#carouselExampleIndicators" data-slide-to="8"></li>
+          </ol>
+          <div class="carousel-inner">
+            <div class="carousel-item active">
+              <div class="carousel-caption d-none d-md-block">
+                <h5 class="caption">TinDog</h5>
+                <p class="caption">A dating site for your Doggos.</p>
+              </div>
+              <a href="https://worksbetter.github.io/tindog/" target="_blank">
+                <img class="d-block w-100" src="images/tindog.PNG" alt="TinDog">
+              </a>
+            </div>
+            <div class="carousel-item">
+              <div class="carousel-caption d-none d-md-block">
+                <h5 class="caption">ToDo list</h5>
+                <p class="caption">Create your personal todo list on the go.</p>
+              </div>
+              <a href="http://radiant-depths-04981.herokuapp.com/" target="_blank">
+                <img class="d-block w-100" src="images/todolist.png" alt="ToDo List">
+              </a>
+            </div>
+            <div class="carousel-item">
+              <div class="carousel-caption d-none d-md-block">
+                <h5 class="caption">Car Racing</h5>
+                <p class="caption">Play against your friend in a 1 v 1 car race.</p>
+              </div>
+              <a href="https://worksbetter.github.io/Car_Racing/" target="_blank">
+                <img class="d-block w-100" src="images/carracing.png" alt="Car Racing">
+              </a>
+            </div>
+            <div class="carousel-item">
+              <div class="carousel-caption d-none d-md-block">
+                <h5 class="caption">Random Dice Generator</h5>
+                <p class="caption">As easy as flipping a coin to decide.</p>
+              </div>
+              <a href="https://worksbetter.github.io/randomdicegenerator/" target="_blank">
+                <img class="d-block w-100" src="images/dicegenerator.png" alt="Random Dice Generator">
+              </a>
+            </div>
+            <div class="carousel-item">
+              <div class="carousel-caption d-none d-md-block">
+                <h5 class="caption">Tennis Game</h5>
+                <p class="caption">Escape the stress and play.</p>
+              </div>
+              <a href="https://worksbetter.github.io/Tennis_Game/" target="_blank">
+                <img class="d-block w-100" src="images/tennis.png" alt="Tennis Game">
+              </a>
+            </div>
+            <div class="carousel-item">
+              <div class="carousel-caption d-none d-md-block">
+                <h5 class="caption">Simon Game</h5>
+                <p class="caption">Test your memory.</p>
+              </div>
+              <a href="https://worksbetter.github.io/simon_game/" target="_blank">
+                <img class="d-block w-100" src="images/simon.png" alt="Simon Game">
+              </a>
+            </div>
+            <div class="carousel-item">
+              <div class="carousel-caption d-none d-md-block">
+                <h5 class="caption">DrumKit</h5>
+                <p class="caption">Be the drummer that you always dreamt to be.</p>
+              </div>
+              <a href="https://worksbetter.github.io/drumkit/" target="_blank">
+                <img class="d-block w-100" src="images/drumkit.png" alt="DrumKit">
+              </a>
+            </div>
+            <div class="carousel-item">
+              <div class="carousel-caption d-none d-md-block">
+                <h5 class="caption">Brick Breaker</h5>
+                <p class="caption">Go retro with the classic brick breaker.</p>
+              </div>
+              <a href="https://worksbetter.github.io/Brick_Breaker/" target="_blank">
+                <img class="d-block w-100" src="images/brickbreaker.png" alt="Brick Breaker">
+              </a>
+            </div>
+            <div class="carousel-item">
+              <div class="carousel-caption d-none d-md-block">
+                <h5 class="caption">Warrior Legends</h5>
+                <p class="caption">Can you clear this level?</p>
+              </div>
+              <a href="https://worksbetter.github.io/Warrior_Legends/" target="_blank">
+                <img class="d-block w-100" src="images/warriordungeon.png" alt="Warrior Legends">
+              </a>
+            </div>
+          </div>
+          <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+        </div>
+        <img class="message-image" src="images/sans.png" alt="Comic Sans">
+        <em>The games will only be playable if you're using a computer/laptop.</em>
+      </div>
+      <hr>
+
+      <div class="contact-me">
+        <h2>Get In Touch</h2>
+        <h3>If you want someone to build you a web application</h3>
+        <p class="contact-message">Need someone to build you a website or want to talk to a fellow gamer? Let's talk about it! We can work on a website while playing games in our free time!</p>
+        <a class="btn" href="mailto:worksbetter12@gmail.com">CONTACT ME</a>
+      </div>
+      <address>
+        <i class="fas fa-envelope"></i><a href="mailto:worksbetter12@gmail.com">worksbetter12@gmail.com</a><br>
+        <i class="fas fa-phone-square-alt"></i><a href="tel:(+92) 3174026938">(+92) 3174026938</a>
+      </address>
+    </div>
+
+
+    <div class="bottom-container">
+      <a class="footer-link" href="https://www.upwork.com/freelancers/~01810641eb44095963">Upwork</a>
+      <a class="footer-link" href="https://twitter.com/WorksBetter_">Twitter</a>
+      <p class="copyright">© 2020 WorksBetter.</p>
+    </div>
+
+  </body>
+</html>
