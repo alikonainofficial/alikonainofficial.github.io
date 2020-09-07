@@ -15,4 +15,6 @@
         document.getElementById("video-button").appendChild(iframe);
       }, 3500);
     });
+    var date = new Date()
+    $("#cpdate").text(date.getFullYear());
   });
