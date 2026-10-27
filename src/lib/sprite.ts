@@ -20,61 +20,57 @@ export interface SpritePath {
   d: string;
 }
 
-/** Ali in his everyday kit: swept hair, glasses, moustache, olive tank, track pants. */
+/** Ali in his gym kit, drawn like a classic handheld-RPG character: big head, swept fringe, olive tank, track pants. */
 export const ali: Sprite = {
   width: 20,
-  height: 31,
+  height: 27,
   grid: [
     '......KKKKKKKK......',
     '....KKHHHHHHHHKK....',
     '...KHHHHHhhhHHHHK...',
-    '..KHHHHhhhHHHHHHHK..',
+    '..KHHHHhhHHHHHHHHK..',
     '..KHHHHHHHHHHHHHHK..',
-    '..KHHHHHHHHHHHHHHK..',
-    '..KHHHHHHHHHHHHHHK..',
-    '...KHHHHHHSSSSSHHK..',
-    '...KHSSSSSSSSSSHK...',
-    '..KSGGGGGSSGGGGGSK..',
-    '..KSGSSSGGGGSSSGSK..',
-    '..KSGSESGSSGSESGSK..',
-    '..KSGGGGGSSGGGGGSK..',
-    '...KSSSSSssSSSSSK...',
-    '...KSSMMMMMMMMSSK...',
-    '...KSSSSSSmmSSSSK...',
-    '....KSSSSSSSSSSK....',
-    '.....KKsSSSSsKK.....',
+    '.KHHHHHHHHHHHHHHHHK.',
+    '.KHHHHHHHHHHHHHHHHK.',
+    '.KHHHHHHHHHHHHHHHHK.',
+    '.KHHHHHHHHHHdsSSHHK.',
+    '.KHHHHHHdsSSSSSSHHK.',
+    '.KHHHHdsSSSSSSSSHHK.',
+    '.KHHdSBBSSSSBBSSSHK.',
+    '.KSSSSEWSSSSEWSSSSK.',
+    '.KSSSSEESSSSEESSSSK.',
+    '..KSSSSSSSSSSSSSSK..',
+    '...KsSSSSSSSSSSsK...',
+    '....KKsSSSSSSsKK....',
     '..KAAOOOSSSSOOOAAK..',
-    '.KAAAOOOOOOOOOOAAAK.',
-    '.KAaKOOOOOOOOOOKaAK.',
-    '.KAaKOOOoOOOOOOKaAK.',
-    '.KAaKOOOOOOOOoOKaAK.',
-    '.KAAKooooooooooKAAK.',
-    '..KAKPPPPPPPPPPKAK..',
-    '...KKPPPPPPPPPPKK...',
+    '.KAAAOlOOOOOOOOAAAK.',
+    '.KAaKOlOOOOOOOoKaAK.',
+    '.KAaKOOOOOOOOOoKaAK.',
+    '.KSSKooooooooooKSSK.',
+    '..KKKPPPPPPPPPPKKK..',
     '....KPYPPKKPPYPK....',
     '....KPYPPKKPPYPK....',
-    '....KPYPPKKPPYPK....',
-    '...KWWWwWKKWwWWWK...',
-    '...KKKKKK..KKKKKK...',
+    '...KwWWWWKKWWWWwK...',
+    '...KKKKKKKKKKKKKK...',
   ],
   palette: {
-    K: '#140f12', // outline
-    H: '#241a16', // hair
-    h: '#3e2d25', // hair highlight
-    S: '#d9a17b', // skin
-    s: '#b98261', // skin shade
-    A: '#d9a17b', // arms
-    a: '#b98261', // arm shade
-    G: '#0f0d10', // glasses frame
-    E: '#2a1c17', // eyes
-    M: '#2a1c17', // moustache
-    m: '#a35f4c', // lip
-    O: '#5c5a2b', // olive tank
-    o: '#47451f', // tank shade
-    P: '#1c1b21', // track pants
-    Y: '#d6b33a', // pant stripe
-    W: '#ece9e1', // sneakers
-    w: '#9a978e', // sneaker shade
+    K: '#1c1315', // outline
+    H: '#43302a', // hair
+    h: '#7a5b4b', // hair shine
+    d: '#2a1d19', // fringe edge
+    B: '#2a1d19', // eyebrows
+    S: '#eab48d', // skin
+    s: '#cf9572', // skin shade
+    A: '#eab48d', // arms
+    a: '#cf9572', // arm shade
+    E: '#2a1d1f', // eyes
+    W: '#ffffff', // eye shine and sneakers
+    O: '#7a7a34', // olive tank
+    o: '#5b5b24', // tank shade
+    l: '#9b9b4a', // tank highlight
+    P: '#2b2a33', // track pants
+    Y: '#e8c547', // pant stripe
+    w: '#b9b4a8', // sneaker shade
   },
 };
 
