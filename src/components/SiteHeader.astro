@@ -1,0 +1,67 @@
+---
+import { person } from '../lib/profile';
+
+const links = [
+  { href: '/#work', label: 'Work' },
+  { href: '/#story', label: 'Story' },
+  { href: '/#arcade', label: 'Arcade' },
+  { href: '/#contact', label: 'Contact' },
+];
+---
+
+<header class="site-header wrap">
+  <a class="wordmark display" href="/" aria-label={`${person.name}, home`}>{person.name}</a>
+  <nav aria-label="Sections">
+    <ul>
+      {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+    </ul>
+  </nav>
+  <div class="btn-row">
+    <a class="btn btn--line" href="/resume/">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="10" cy="12" r="6.5"></circle>
+        <path d="M10 2v3M8 2h4M10 12V9"></path>
+      </svg>
+      Skip the show
+    </a>
+    <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 32px;
+    padding-block: 18px;
+  }
+
+  .wordmark {
+    font-size: 36px;
+    line-height: 1;
+    color: var(--brass);
+    text-decoration: none;
+  }
+
+  nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 28px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  nav a {
+    color: var(--playbill);
+    text-decoration: none;
+    padding-block: 6px;
+    border-bottom: 3px solid transparent;
+  }
+
+  nav a:hover {
+    border-bottom-color: var(--brass);
+  }
+</style>

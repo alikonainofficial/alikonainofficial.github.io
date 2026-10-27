@@ -1,0 +1,196 @@
+---
+import Avatar from './Avatar.astro';
+import ColdRead from './ColdRead.astro';
+import { person } from '../lib/profile';
+import { TAGLINES } from '../lib/cold-read';
+---
+
+<section class="stage" aria-labelledby="stage-title">
+  <div class="curtain curtain--left" aria-hidden="true"></div>
+  <div class="curtain curtain--right" aria-hidden="true"></div>
+  <div class="valance" aria-hidden="true"></div>
+  <div class="spotlight" aria-hidden="true"></div>
+  <div class="floor" aria-hidden="true"></div>
+
+  <div class="stage-copy">
+    <h1 id="stage-title" class="display">{person.name}</h1>
+    <p class="tagline" data-tagline>{TAGLINES.fullstack}</p>
+  </div>
+
+  <div class="performer">
+    <Avatar scale={8} label="Pixel-art Ali, glasses and moustache, standing in the spotlight" />
+    <div class="shadow" aria-hidden="true"></div>
+  </div>
+
+  <div class="dialogue-slot">
+    <ColdRead />
+  </div>
+
+  <!-- The one orchestrated moment: the front curtain opens once, on load. -->
+  <div class="front-curtain front-curtain--left" aria-hidden="true"></div>
+  <div class="front-curtain front-curtain--right" aria-hidden="true"></div>
+</section>
+
+<style>
+  .stage {
+    position: relative;
+    overflow: hidden;
+    min-height: 860px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-inline: var(--gutter);
+  }
+
+  .curtain,
+  .valance,
+  .front-curtain {
+    background: repeating-linear-gradient(90deg, #6a1a2c 0 14px, #4c1020 14px 30px, #36091a 30px 40px);
+  }
+
+  .curtain {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 14%;
+  }
+
+  .curtain--left {
+    left: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 62%, 88% 62%, 88% 74%, 74% 74%, 74% 86%, 58% 86%, 58% 100%, 0 100%);
+  }
+
+  .curtain--right {
+    right: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 42% 100%, 42% 86%, 26% 86%, 26% 74%, 12% 74%, 12% 62%, 0 62%);
+  }
+
+  .valance {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 56px;
+    border-bottom: 8px solid var(--brass);
+  }
+
+  .valance::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: 12px;
+    margin-top: 8px;
+    background: repeating-linear-gradient(90deg, var(--brass) 0 8px, transparent 8px 20px);
+  }
+
+  .spotlight {
+    position: absolute;
+    left: 50%;
+    top: 76px;
+    width: min(760px, 70%);
+    height: 640px;
+    transform: translateX(-50%);
+    background: rgba(227, 180, 81, 0.13);
+    clip-path: polygon(40% 0, 60% 0, 100% 100%, 0 100%);
+  }
+
+  .floor {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 170px;
+    background: repeating-linear-gradient(0deg, var(--wood) 0 26px, var(--wood-dark) 26px 30px);
+    border-top: 8px solid var(--brass);
+  }
+
+  .stage-copy {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 900px;
+    padding-top: 116px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(68px, 10vw, 136px);
+    line-height: 0.9;
+    color: var(--brass);
+  }
+
+  .tagline {
+    margin: 20px 0 0;
+    max-width: 36ch;
+    font-size: clamp(19px, 2vw, 24px);
+    line-height: 1.45;
+    text-wrap: balance;
+  }
+
+  .performer {
+    position: relative;
+    margin-top: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .shadow {
+    width: 200px;
+    height: 12px;
+    margin-top: -6px;
+    background: rgba(0, 0, 0, 0.45);
+  }
+
+  .dialogue-slot {
+    position: relative;
+    width: 100%;
+    max-width: 880px;
+    margin: 28px 0 48px;
+  }
+
+  .front-curtain {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 51%;
+    z-index: 5;
+    pointer-events: none;
+    animation: open 900ms steps(9, end) 200ms forwards;
+  }
+
+  .front-curtain--left {
+    left: 0;
+    --to: -100%;
+  }
+
+  .front-curtain--right {
+    right: 0;
+    --to: 100%;
+  }
+
+  @keyframes open {
+    to {
+      transform: translateX(var(--to));
+      visibility: hidden;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .front-curtain {
+      display: none;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .stage-copy {
+      padding-top: 96px;
+    }
+
+    .curtain {
+      width: 9%;
+    }
+  }
+</style>

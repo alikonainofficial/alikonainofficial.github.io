@@ -1,0 +1,283 @@
+---
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import Suit from './Suit.astro';
+
+const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
+const featured = work[0]?.id;
+// Deal the featured card second, so it sits raised near the middle of the fan.
+const fan = work.length > 1 ? [work[1]!, work[0]!, ...work.slice(2)] : work;
+const tilt = ['-11deg', '-3deg', '5deg', '12deg'];
+const lift = ['18px', '-22px', '4px', '30px'];
+---
+
+<section id="work" class="deck wrap" aria-labelledby="deck-title">
+  <div class="deck-head">
+    <h2 id="deck-title" class="display">Pick a card.</h2>
+    <p>Four pieces of work. I've already turned one over for you, because I had a feeling you'd pick it.</p>
+  </div>
+
+  <div class="deck-body">
+    <div class="fan" role="tablist" aria-label="Projects">
+      {
+        fan.map((entry, i) => (
+          <button
+            class:list={['card', { 'card--featured': entry.id === featured }]}
+            type="button"
+            role="tab"
+            id={`tab-${entry.id}`}
+            aria-controls={`panel-${entry.id}`}
+            aria-selected={entry.id === featured ? 'true' : 'false'}
+            tabindex={entry.id === featured ? 0 : -1}
+            style={`--tilt:${tilt[i] ?? '0deg'};--lift:${lift[i] ?? '0px'}`}
+          >
+            <Suit name={entry.data.suit} />
+            <span class="card-text">
+              <span class="card-title">{entry.data.title}</span>
+              <span class="card-line">{entry.data.card}</span>
+            </span>
+          </button>
+        ))
+      }
+    </div>
+
+    <div class="panels">
+      {
+        work.map((entry) => (
+          <article
+            class="panel px-corners"
+            id={`panel-${entry.id}`}
+            role="tabpanel"
+            aria-labelledby={`tab-${entry.id}`}
+            data-panel={entry.id}
+            data-featured={entry.id === featured ? '' : undefined}
+          >
+            <h3 class="display">{entry.data.title}</h3>
+            <p class="meta">
+              {entry.data.company}, {entry.data.period.toLowerCase()}
+            </p>
+            <p class="summary">{entry.data.summary}</p>
+            <Image
+              src={entry.data.cover}
+              alt={entry.data.coverAlt}
+              widths={[480, 760, 1100]}
+              sizes="(min-width: 1100px) 560px, 92vw"
+              class="cover"
+              loading="lazy"
+            />
+            <ul class="chips" aria-label="Stack">
+              {entry.data.stack.slice(0, 5).map((s) => <li>{s}</li>)}
+            </ul>
+            <a class="btn btn--ink" href={`/work/${entry.id}/`}>
+              Read the case file<span class="visually-hidden">: {entry.data.title}</span>
+            </a>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  const tabs = [...document.querySelectorAll<HTMLButtonElement>('.fan [role="tab"]')];
+  const panels = [...document.querySelectorAll<HTMLElement>('.panels [role="tabpanel"]')];
+
+  function select(tab: HTMLButtonElement, focus = false) {
+    for (const t of tabs) {
+      const on = t === tab;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+      t.classList.toggle('is-up', on);
+    }
+    for (const p of panels) p.hidden = p.id !== tab.getAttribute('aria-controls');
+    if (focus) tab.focus();
+  }
+
+  const start = tabs.find((t) => t.getAttribute('aria-selected') === 'true') ?? tabs[0];
+  if (start) select(start);
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => select(tab));
+    tab.addEventListener('keydown', (e) => {
+      const keys: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+      let next: HTMLButtonElement | undefined;
+      if (e.key in keys) next = tabs[(i + (keys[e.key] ?? 0) + tabs.length) % tabs.length];
+      else if (e.key === 'Home') next = tabs[0];
+      else if (e.key === 'End') next = tabs[tabs.length - 1];
+      if (next) {
+        e.preventDefault();
+        select(next, true);
+      }
+    });
+  });
+</script>
+
+<style>
+  .deck {
+    padding-block: 120px 80px;
+  }
+
+  .deck-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px 40px;
+    margin-bottom: 48px;
+  }
+
+  .deck-head h2 {
+    margin: 0;
+    font-size: clamp(56px, 7vw, 88px);
+    color: var(--brass);
+  }
+
+  .deck-head p {
+    margin: 0;
+    max-width: 36ch;
+    color: var(--muted);
+  }
+
+  .deck-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 56px;
+  }
+
+  .fan {
+    flex: 1 1 560px;
+    position: sticky;
+    top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 40px 16px 32px;
+  }
+
+  .card {
+    position: relative;
+    width: 168px;
+    height: 248px;
+    margin: 0 -12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: left;
+    background: var(--playbill);
+    color: var(--ink);
+    border: 4px solid var(--ink);
+    box-shadow: 8px 8px 0 #0f0407;
+    font: inherit;
+    cursor: pointer;
+    transform: rotate(var(--tilt)) translateY(var(--lift));
+    transition: transform 160ms steps(3);
+  }
+
+  .card :global(svg) {
+    color: var(--velvet-light);
+  }
+
+  .card:hover {
+    transform: rotate(var(--tilt)) translateY(calc(var(--lift) - 14px));
+  }
+
+  .card[aria-selected='true'] {
+    z-index: 10;
+    background: var(--brass);
+    transform: rotate(var(--tilt)) translateY(calc(var(--lift) - 18px));
+  }
+
+  .card[aria-selected='true'] :global(svg) {
+    color: var(--ink);
+  }
+
+  .card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .card-title {
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .card-line {
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .panels {
+    flex: 1 1 440px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .panel {
+    background: var(--playbill);
+    color: var(--ink);
+    padding: 32px clamp(20px, 3vw, 36px);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel[hidden] {
+    display: none;
+  }
+
+  .panel h3 {
+    margin: 0;
+    font-size: clamp(42px, 4vw, 52px);
+    color: var(--velvet-light);
+  }
+
+  .meta {
+    margin: -6px 0 0;
+    font-size: 16px;
+    color: var(--muted-ink);
+  }
+
+  .summary {
+    margin: 0;
+    font-size: 18px;
+    max-width: 56ch;
+  }
+
+  .panel :global(.cover) {
+    width: 100%;
+    height: auto;
+    border: 3px solid var(--ink);
+  }
+
+  .panel .btn {
+    align-self: flex-start;
+  }
+
+  @media (max-width: 640px) {
+    .fan {
+      position: static;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px 16px;
+      padding: 8px 4px 0;
+    }
+
+    .card {
+      width: auto;
+      height: 200px;
+      margin: 0;
+      transform: rotate(calc(var(--tilt) / 3));
+    }
+
+    .card:hover,
+    .card[aria-selected='true'] {
+      transform: rotate(calc(var(--tilt) / 3)) translateY(-8px);
+    }
+  }
+</style>

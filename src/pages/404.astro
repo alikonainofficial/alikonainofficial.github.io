@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Avatar from '../components/Avatar.astro';
+---
+
+<Base title="Page not found" noindex>
+  <SiteHeader />
+  <main id="main" class="lost wrap">
+    <Avatar scale={6} label="Pixel-art Ali, looking around for the missing page" />
+    <h1 class="display">This page vanished.</h1>
+    <p>Good trick, but it wasn't mine. The address may be old, or there's a typo in it.</p>
+    <div class="btn-row">
+      <a class="btn btn--brass" href="/">Back to the stage</a>
+      <a class="btn btn--line" href="/resume/">See the résumé</a>
+    </div>
+  </main>
+</Base>
+
+<style>
+  .lost {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+    padding-block: 64px;
+  }
+
+  h1 {
+    margin: 12px 0 0;
+    font-size: clamp(56px, 8vw, 96px);
+    color: var(--brass);
+  }
+
+  p {
+    margin: 0;
+    max-width: 44ch;
+    color: var(--muted);
+  }
+</style>

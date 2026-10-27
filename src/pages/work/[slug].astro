@@ -1,0 +1,262 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import Suit from '../../components/Suit.astro';
+
+export const getStaticPaths = (async () => {
+  const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
+  return work.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: { entry, next: work[(i + 1) % work.length]! },
+  }));
+}) satisfies GetStaticPaths;
+
+const { entry, next } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+---
+
+<Base title={d.title} description={d.summary}>
+  <SiteHeader />
+  <main id="main" class="case wrap">
+    <a class="back" href="/#work">Back to the deck</a>
+
+    <header class="case-head">
+      <Suit name={d.suit} size={48} />
+      <h1 class="display">{d.title}</h1>
+      <p class="case-meta">{d.company}, {d.period.toLowerCase()}. {d.role}.</p>
+    </header>
+
+    <section class="dossier-frame px-corners" aria-label="Case file summary">
+      <dl class="dossier">
+        <div>
+          <dt>Objective</dt>
+          <dd>{d.objective}</dd>
+        </div>
+        <div>
+          <dt>Deployed</dt>
+          <dd>{d.deployed}</dd>
+        </div>
+        <div>
+          <dt>Outcome</dt>
+          <dd>{d.outcome}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <figure class="shot">
+      <Image src={d.cover} alt={d.coverAlt} widths={[640, 960, 1280]} sizes="(min-width: 960px) 880px, 92vw" />
+    </figure>
+
+    <article class="prose">
+      <Content />
+    </article>
+
+    {
+      d.gallery.length > 0 && (
+        <section class="gallery" aria-label="More screenshots">
+          {d.gallery.map((g) => (
+            <figure class="shot">
+              <Image src={g.src} alt={g.alt} widths={[640, 960]} sizes="(min-width: 960px) 880px, 92vw" loading="lazy" />
+              {g.caption && <figcaption>{g.caption}</figcaption>}
+            </figure>
+          ))}
+        </section>
+      )
+    }
+
+    <section class="kit" aria-labelledby="kit-title">
+      <h2 id="kit-title">Kit</h2>
+      <ul class="chips">
+        {d.stack.map((s) => <li>{s}</li>)}
+      </ul>
+      {
+        d.links.length > 0 && (
+          <div class="btn-row">
+            {d.links.map((l) => (
+              <a class="btn btn--line-brass" href={l.href}>
+                {l.label}
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <nav class="next" aria-label="Next case file">
+      <a href={`/work/${next.id}/`}>
+        <span class="next-label">Next card</span>
+        <span class="display next-title">{next.data.title}</span>
+      </a>
+    </nav>
+  </main>
+  <SiteFooter line="Seen enough of the trick? Let's talk about the job." />
+</Base>
+
+<style>
+  .case {
+    max-width: 960px;
+    padding-block: 32px 96px;
+  }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--muted);
+  }
+
+  .case-head {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 24px 0 36px;
+    color: var(--brass);
+  }
+
+  .case-head h1 {
+    margin: 0;
+    font-size: clamp(56px, 8vw, 104px);
+    color: var(--brass);
+  }
+
+  .case-meta {
+    margin: 0;
+    font-size: 19px;
+    color: var(--muted);
+  }
+
+  .dossier-frame {
+    background: var(--playbill);
+    color: var(--ink);
+    padding: clamp(22px, 3vw, 32px);
+  }
+
+  .dossier {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 20px 32px;
+  }
+
+  .dossier dt {
+    font-family: var(--font-display);
+    font-size: 30px;
+    line-height: 1;
+    color: var(--velvet-light);
+    margin-bottom: 6px;
+  }
+
+  .dossier dd {
+    margin: 0;
+    font-size: 17px;
+  }
+
+  .shot {
+    margin: 40px 0 0;
+  }
+
+  .shot :global(img) {
+    width: 100%;
+    height: auto;
+    border: 4px solid var(--playbill);
+  }
+
+  .shot figcaption {
+    margin-top: 10px;
+    font-size: 16px;
+    color: var(--muted);
+  }
+
+  .prose {
+    max-width: 68ch;
+    margin-top: 48px;
+    font-size: 18px;
+  }
+
+  .prose :global(h2) {
+    margin: 48px 0 12px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 1;
+    color: var(--brass);
+  }
+
+  .prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .prose :global(p),
+  .prose :global(li) {
+    line-height: 1.65;
+  }
+
+  .prose :global(ul) {
+    padding-left: 22px;
+    list-style: square;
+  }
+
+  .prose :global(li + li) {
+    margin-top: 8px;
+  }
+
+  .prose :global(li::marker) {
+    color: var(--brass);
+  }
+
+  .prose :global(strong) {
+    color: var(--brass);
+    font-weight: 600;
+  }
+
+  .gallery {
+    margin-top: 16px;
+  }
+
+  .kit {
+    margin-top: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .kit h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 40px;
+    color: var(--brass);
+  }
+
+  .next {
+    margin-top: 72px;
+    border-top: 3px dotted var(--velvet-light);
+    padding-top: 24px;
+  }
+
+  .next a {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    text-decoration: none;
+  }
+
+  .next-label {
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  .next-title {
+    font-size: clamp(40px, 5vw, 56px);
+    color: var(--brass);
+  }
+
+  .next a:hover .next-title {
+    color: var(--playbill);
+  }
+</style>

@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Stage from '../components/Stage.astro';
+import CardDeck from '../components/CardDeck.astro';
+import Playbill from '../components/Playbill.astro';
+import Arcade from '../components/Arcade.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+---
+
+<Base>
+  <SiteHeader />
+  <main id="main">
+    <Stage />
+    <CardDeck />
+    <Playbill />
+    <Arcade />
+  </main>
+  <SiteFooter />
+</Base>

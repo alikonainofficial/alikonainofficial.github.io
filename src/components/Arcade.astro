@@ -1,0 +1,124 @@
+---
+import { Image } from 'astro:assets';
+import Suit from './Suit.astro';
+import carracing from '../assets/arcade/carracing.png';
+import warrior from '../assets/arcade/warriordungeon.png';
+import brick from '../assets/arcade/brickbreaker.png';
+import tennis from '../assets/arcade/tennis.png';
+import simon from '../assets/arcade/simon.png';
+import drumkit from '../assets/arcade/drumkit.png';
+import dice from '../assets/arcade/dicegenerator.png';
+
+const games = [
+  { title: 'Car Racing', line: 'Race a friend, head to head.', href: 'https://alikonainofficial.github.io/Car_Racing/', img: carracing },
+  { title: 'Warrior Legends', line: 'Grab the keys and clear the dungeon.', href: 'https://alikonainofficial.github.io/Warrior_Legends/', img: warrior },
+  { title: 'Brick Breaker', line: 'The classic, no frills.', href: 'https://alikonainofficial.github.io/Brick_Breaker/', img: brick },
+  { title: 'Tennis', line: 'A quick rally to clear your head.', href: 'https://alikonainofficial.github.io/Tennis_Game/', img: tennis },
+  { title: 'Simon', line: 'How long can you hold the pattern?', href: 'https://alikonainofficial.github.io/simon_game/', img: simon },
+  { title: 'Drum Kit', line: 'Play the drums with your keyboard.', href: 'https://alikonainofficial.github.io/drumkit/', img: drumkit },
+  { title: 'Dice Roller', line: 'Settle an argument the fair way.', href: 'https://alikonainofficial.github.io/randomdicegenerator/', img: dice },
+];
+---
+
+<section id="arcade" class="arcade" aria-labelledby="arcade-title">
+  <div class="wrap">
+    <div class="arcade-head">
+      <h2 id="arcade-title" class="display">
+        <Suit name="joystick" size={40} />
+        The Arcade
+      </h2>
+      <p>Where it started: small browser games I built in 2020 while learning JavaScript. They still run. Best on a laptop with a keyboard.</p>
+    </div>
+    <ul class="games">
+      {
+        games.map((g) => (
+          <li>
+            <a class="game" href={g.href}>
+              <Image src={g.img} alt="" widths={[320, 480]} sizes="(min-width: 900px) 300px, 45vw" loading="lazy" />
+              <span class="game-title">{g.title}</span>
+              <span class="game-line">{g.line}</span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .arcade {
+    background: var(--ink);
+    border-block: 8px solid var(--velvet-light);
+    padding-block: 88px;
+  }
+
+  .arcade-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: 12px 40px;
+    margin-bottom: 40px;
+  }
+
+  .arcade-head h2 {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+    font-size: clamp(52px, 6vw, 80px);
+    color: var(--brass);
+  }
+
+  .arcade-head p {
+    margin: 0;
+    max-width: 44ch;
+    color: var(--muted);
+  }
+
+  .games {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
+    gap: 20px;
+  }
+
+  .game {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 10px 16px;
+    background: var(--ink-soft);
+    border: 3px solid var(--velvet-light);
+    color: var(--playbill);
+    text-decoration: none;
+  }
+
+  .game:hover {
+    border-color: var(--brass);
+    color: var(--playbill);
+  }
+
+  .game :global(img) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    margin-bottom: 6px;
+    image-rendering: pixelated;
+  }
+
+  .game-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--brass);
+  }
+
+  .game-line {
+    font-size: 16px;
+    color: var(--muted);
+  }
+</style>
