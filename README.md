@@ -35,7 +35,7 @@ Combine them: `https://alikonainofficial.github.io/?for=ai&co=Acme`.
 
 ## Sound
 
-The jazz is on by default. Browsers only allow sound after a visitor's first click, tap or key press, so the band starts then; the plain résumé stays quiet unless the visitor asks for music. Anyone who presses **Stop the jazz** stays switched off on later visits too. The music is a small generative lounge-jazz band written with the Web Audio API in `src/lib/audio.ts`: walking bass, brushes, a ride cymbal and electric-piano chords over a ii–V–I, swung at 92 BPM. Buttons get short synthesized sound effects. There are no audio files, and the band keeps playing between pages because the site uses Astro's client router.
+Sound stays off until the visitor presses **Play the jazz**. Until they make a choice, that button glows and a small note points at it ("Press play. The band's been waiting all night."); the note can be dismissed, and the plain résumé shows neither. The choice is remembered: anyone who left the band playing hears it again from their first click, tap or key press on their next visit (browsers don't allow sound before one). The music is a small generative lounge-jazz band written with the Web Audio API in `src/lib/audio.ts`: walking bass, brushes, a ride cymbal and electric-piano chords over a ii–V–I, swung at 92 BPM. Buttons get short synthesized sound effects. There are no audio files, and the band keeps playing between pages because the site uses Astro's client router.
 
 ## Links
 

@@ -3,10 +3,10 @@
  *
  * Nothing is downloaded: the lounge-jazz loop (walking bass, electric-piano
  * comping, brushes and a ride cymbal over a ii-V-I progression) and every click,
- * card flip and chime are generated in the browser. Sound is on by default.
- * Browsers only allow audio after the visitor's first click, tap or key press,
- * so the band starts then. A visitor who switches it off stays switched off,
- * and that choice is remembered on their device.
+ * card flip and chime are generated in the browser. Sound stays off until the
+ * visitor presses play, and that choice is remembered on their device. Someone
+ * who left the band playing last time hears it again from their first click,
+ * tap or key press (browsers don't allow sound before one).
  */
 
 export type Sfx = 'click' | 'tick' | 'flip' | 'chime' | 'reveal' | 'whoosh';
@@ -44,6 +44,8 @@ let beatIndex = 0;
 let on = false;
 let rng = 1;
 let armed = false;
+/** Set when the button is pressed, so the invitation goes away even if storage is blocked. */
+let choseThisVisit = false;
 
 function random(): number {
   // Small deterministic generator so the band never plays exactly the same loop twice in a row.
@@ -51,12 +53,23 @@ function random(): number {
   return (rng - 1) / 2147483646;
 }
 
-/** On unless this visitor has switched it off. */
+/** Off until this visitor turns it on. */
 export function soundPreferred(storage: Pick<Storage, 'getItem'> | undefined = safeStorage()): boolean {
   try {
-    return storage?.getItem(PREF) !== 'off';
+    return storage?.getItem(PREF) === 'on';
   } catch {
-    return true;
+    return false;
+  }
+}
+
+/** Whether this visitor has ever pressed the sound button, either way. Until then, the button invites them to. */
+export function soundChosen(storage: Pick<Storage, 'getItem'> | undefined = safeStorage()): boolean {
+  if (choseThisVisit) return true;
+  try {
+    const value = storage?.getItem(PREF);
+    return value === 'on' || value === 'off';
+  } catch {
+    return false;
   }
 }
 
@@ -266,6 +279,7 @@ function stopBand(): void {
 
 /** The sound button: remember the choice and act on it straight away. */
 export function setSound(enabled: boolean): void {
+  choseThisVisit = true;
   try {
     localStorage.setItem(PREF, enabled ? 'on' : 'off');
   } catch {
@@ -331,9 +345,9 @@ function onFirstGesture(e: Event): void {
 }
 
 /**
- * Sound is on by default, but browsers only allow it after the visitor's first
- * click, tap or key press. Wait for one, then start the band. Safe to call on
- * every page: it does nothing when the band is already playing or switched off.
+ * For a visitor who left the band playing last time: browsers only allow sound
+ * after a click, tap or key press, so wait for one, then start the band. Safe to
+ * call on every page: it does nothing when the band is already playing or off.
  */
 export function armAutostart(): void {
   if (armed || !soundPreferred() || (on && ctx?.state === 'running')) return;

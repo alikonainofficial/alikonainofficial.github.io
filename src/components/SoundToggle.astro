@@ -3,39 +3,78 @@ interface Props {
   tone?: 'dark' | 'light';
 }
 const { tone = 'dark' } = Astro.props;
+// The invitation to press play belongs to the show. The plain résumé just gets the button.
+const invite = tone === 'dark';
 ---
 
-<button class:list={['sound-toggle', `sound-toggle--${tone}`]} type="button" aria-pressed="false" data-sound-toggle data-sfx="none">
-  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-    <path d="M8 15V4l9-2v11"></path>
-    <circle cx="5.5" cy="15" r="2.5"></circle>
-    <circle cx="14.5" cy="13" r="2.5"></circle>
-  </svg>
-  <span class="sl-full" data-sound-label>Play the jazz</span>
-  <span class="sl-short" aria-hidden="true">Jazz</span>
-</button>
+<span class="sound-wrap">
+  <button
+    class:list={['sound-toggle', `sound-toggle--${tone}`]}
+    type="button"
+    aria-pressed="false"
+    data-sound-toggle
+    data-invite={invite ? '' : undefined}
+    data-sfx="none"
+  >
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <path d="M8 15V4l9-2v11"></path>
+      <circle cx="5.5" cy="15" r="2.5"></circle>
+      <circle cx="14.5" cy="13" r="2.5"></circle>
+    </svg>
+    <span class="sl-full" data-sound-label>Play the jazz</span>
+    <span class="sl-short" aria-hidden="true">Jazz</span>
+  </button>
+  {
+    invite && (
+      <span class="invite" data-sound-invite hidden>
+        <span class="invite-text">Press play. The band's been waiting all night.</span>
+        <button class="invite-close" type="button" aria-label="Dismiss" data-invite-close data-sfx="none">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true">
+            <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </span>
+    )
+  }
+</span>
 
 <script>
-  import { setSound, soundActive } from '../lib/audio';
+  import { setSound, soundActive, soundChosen } from '../lib/audio';
+  import { saveSession, session } from '../lib/client';
 
   function sync() {
     const on = soundActive();
+    // Until the visitor presses the button once, either way, it glows and a note points at it.
+    const inviting = !soundChosen();
+    const dismissed = session('invite-dismissed', false);
     document.querySelectorAll<HTMLButtonElement>('[data-sound-toggle]').forEach((b) => {
       b.setAttribute('aria-pressed', String(on));
       const label = b.querySelector('[data-sound-label]');
       if (label) label.textContent = on ? 'Stop the jazz' : 'Play the jazz';
+      b.classList.toggle('is-inviting', inviting && b.hasAttribute('data-invite'));
     });
+    document.querySelectorAll<HTMLElement>('[data-sound-invite]').forEach((note) => (note.hidden = !inviting || dismissed));
   }
 
   document.addEventListener('click', (e) => {
-    const button = e.target instanceof Element ? e.target.closest('[data-sound-toggle]') : null;
-    if (button) setSound(!soundActive());
+    const target = e.target instanceof Element ? e.target : null;
+    if (target?.closest('[data-sound-toggle]')) setSound(!soundActive());
+    else if (target?.closest('[data-invite-close]')) {
+      // Dismissing hides the note for this visit; the button keeps its glow until it's pressed.
+      saveSession('invite-dismissed', true);
+      sync();
+    }
   });
   document.addEventListener('sound:change', sync);
   document.addEventListener('astro:page-load', sync);
 </script>
 
 <style>
+  .sound-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+
   .sound-toggle {
     position: relative;
     display: inline-flex;
@@ -54,6 +93,112 @@ const { tone = 'dark' } = Astro.props;
   .sound-toggle[aria-pressed='true'] {
     background: var(--brass);
     color: var(--bg);
+  }
+
+  /* The invitation: a soft brass glow that breathes outward, and a note that sways. */
+  .sound-toggle.is-inviting {
+    background: rgba(217, 179, 108, 0.16);
+    color: var(--brass-hi);
+    animation: invite-pulse 2.4s ease-out infinite;
+  }
+
+  .sound-toggle.is-inviting svg {
+    animation: note-sway 1.2s ease-in-out infinite;
+  }
+
+  @keyframes invite-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(217, 179, 108, 0.6);
+    }
+    70% {
+      box-shadow: 0 0 0 16px rgba(217, 179, 108, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(217, 179, 108, 0);
+    }
+  }
+
+  @keyframes note-sway {
+    50% {
+      transform: translateY(-2px) rotate(-10deg);
+    }
+  }
+
+  /* Without motion, a steady ring does the same job. */
+  @media (prefers-reduced-motion: reduce) {
+    .sound-toggle.is-inviting {
+      box-shadow: 0 0 0 4px rgba(217, 179, 108, 0.35);
+    }
+  }
+
+  .invite {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 50%;
+    translate: -50% 0;
+    z-index: 40;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    width: max-content;
+    max-width: 250px;
+    padding: 10px 6px 10px 14px;
+    border-radius: 14px;
+    background: var(--brass);
+    color: var(--bg);
+    font: 600 15px/1.4 var(--font-body);
+    box-shadow: 0 14px 32px rgba(4, 16, 19, 0.45);
+    animation: invite-in 450ms ease-out 1s both;
+  }
+
+  .invite[hidden] {
+    display: none;
+  }
+
+  .invite::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin-left: -6px;
+    background: var(--brass);
+    transform: rotate(45deg);
+  }
+
+  @keyframes invite-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  .invite-text {
+    padding-top: 1px;
+  }
+
+  .invite-close {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--bg);
+    cursor: pointer;
+  }
+
+  .invite-close:hover {
+    background: rgba(16, 41, 46, 0.12);
+  }
+
+  .invite-close:focus-visible {
+    outline: 2px solid var(--bg);
+    outline-offset: 1px;
   }
 
   .sl-short {
@@ -79,6 +224,11 @@ const { tone = 'dark' } = Astro.props;
 
     .sl-short {
       display: inline;
+    }
+
+    .invite {
+      max-width: 230px;
+      font-size: 14px;
     }
   }
 
