@@ -1,0 +1,226 @@
+---
+/**
+ * The host asks to put the music on. It appears beside the avatar on every
+ * visit, because a face and a polite question get far more yeses than a
+ * button in the corner. It never returns once the visitor has answered.
+ */
+---
+
+<div class="host-invite" role="group" aria-labelledby="host-invite-line" data-host-invite hidden>
+  <p id="host-invite-line" class="line" data-host-line aria-live="polite">You look like a jazz person. Shall I have the band play?</p>
+  <p class="small" data-host-extra>Soft volume. Pause it any time.</p>
+  <div class="actions" data-host-extra>
+    <button class="play" type="button" data-host-play data-sfx="none">
+      <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M4 2.5v11a.6.6 0 0 0 .9.5l9-5.5a.6.6 0 0 0 0-1l-9-5.5a.6.6 0 0 0-.9.5z" fill="currentColor"></path>
+      </svg>
+      Play the jazz
+    </button>
+    <button class="later" type="button" data-host-later>Not now</button>
+  </div>
+</div>
+
+<script>
+  import { declineSound, setSound, soundState } from '../lib/audio';
+
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let thanking = false;
+
+  function bubble() {
+    return document.querySelector<HTMLElement>('[data-host-invite]');
+  }
+
+  function leave(el: HTMLElement) {
+    if (el.hidden || el.classList.contains('is-leaving')) return;
+    el.classList.add('is-leaving');
+    window.setTimeout(
+      () => {
+        el.hidden = true;
+        el.classList.remove('is-leaving');
+      },
+      reduced() ? 0 : 260,
+    );
+  }
+
+  // Keep keyboard users where the music control now lives, instead of dropping focus on the floor.
+  function focusSoundButton() {
+    document.querySelector<HTMLElement>('[data-sound-toggle]')?.focus({ preventScroll: true });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const el = bubble();
+    if (el) el.hidden = soundState() !== 'invite';
+  });
+
+  document.addEventListener('click', (e) => {
+    const t = e.target instanceof Element ? e.target : null;
+    const el = bubble();
+    if (!t || !el) return;
+    if (t.closest('[data-host-play]')) {
+      thanking = true;
+      setSound(true);
+      // A small payoff for saying yes, in the host's voice, then he steps aside.
+      el.querySelectorAll<HTMLElement>('[data-host-extra]').forEach((x) => (x.hidden = true));
+      el.querySelector('[data-host-line]')!.textContent = "I knew you'd say yes.";
+      el.classList.add('is-thanking');
+      focusSoundButton();
+      window.setTimeout(() => {
+        thanking = false;
+        leave(el);
+      }, 1700);
+    } else if (t.closest('[data-host-later]')) {
+      declineSound();
+      focusSoundButton();
+      leave(el);
+    }
+  });
+
+  // Answered from the header button instead: the host takes the hint.
+  document.addEventListener('sound:change', () => {
+    const el = bubble();
+    if (el && !thanking && soundState() !== 'invite') leave(el);
+  });
+</script>
+
+<style>
+  .host-invite {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% - 118px);
+    translate: -50% 0;
+    z-index: 5;
+    width: 300px;
+    padding: 16px 18px 14px;
+    border-radius: 18px;
+    background: var(--card);
+    color: var(--card-ink);
+    box-shadow: 0 18px 44px rgba(4, 16, 19, 0.5);
+    transform-origin: 50% 100%;
+    animation: host-arrive 460ms cubic-bezier(0.2, 1.25, 0.4, 1) 600ms both;
+  }
+
+  .host-invite[hidden] {
+    display: none;
+  }
+
+  /* The tail points down at the host. */
+  .host-invite::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -7px;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    background: var(--card);
+    transform: rotate(45deg);
+  }
+
+  .host-invite.is-leaving {
+    animation: host-leave 260ms ease-in both;
+  }
+
+  @keyframes host-arrive {
+    from {
+      opacity: 0;
+      transform: scale(0.88);
+    }
+  }
+
+  @keyframes host-leave {
+    to {
+      opacity: 0;
+      transform: scale(0.94);
+    }
+  }
+
+  .line {
+    margin: 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 20px;
+    line-height: 1.3;
+  }
+
+  .is-thanking .line {
+    text-align: center;
+  }
+
+  .small {
+    margin: 6px 0 0;
+    color: #4c5a55;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .small[hidden],
+  .actions[hidden] {
+    display: none;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    margin-top: 12px;
+  }
+
+  .play {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--bg);
+    color: var(--card);
+    font: 700 15px/1.2 var(--font-body);
+    cursor: pointer;
+  }
+
+  .play:hover {
+    background: var(--surface-2);
+  }
+
+  .later {
+    min-height: 44px;
+    padding: 8px 6px;
+    border: 0;
+    background: transparent;
+    color: var(--card-ink);
+    font: 600 15px/1.2 var(--font-body);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .play:focus-visible,
+  .later:focus-visible {
+    outline: 3px solid var(--bg);
+    outline-offset: 2px;
+  }
+
+  /* On phones the host is small and centred, so the bubble sits under him, pointing up. */
+  @media (max-width: 720px) {
+    .host-invite {
+      position: relative;
+      left: auto;
+      bottom: auto;
+      translate: none;
+      width: min(340px, 100%);
+      margin: 6px auto 0;
+      transform-origin: 50% 0;
+    }
+
+    .host-invite::after {
+      top: -7px;
+      bottom: auto;
+    }
+
+    .line {
+      font-size: 19px;
+    }
+  }
+</style>
