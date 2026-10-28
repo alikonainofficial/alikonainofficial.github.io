@@ -359,7 +359,8 @@ const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
     padding: 0;
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(112px, 40%), 1fr));
+    /* Three across on a phone, so all six cards fit on screen at once: the trick needs that. */
+    grid-template-columns: repeat(auto-fill, minmax(min(112px, 28%), 1fr));
     gap: 14px;
     perspective: 900px;
   }
@@ -408,6 +409,16 @@ const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
     border-radius: 12px;
     backface-visibility: hidden;
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  @media (max-width: 560px) {
+    .court {
+      gap: 10px;
+    }
+
+    .court .pcard-face {
+      padding: 8px 9px;
+    }
   }
 
   .pcard-face {
