@@ -1,5 +1,5 @@
 ---
-import { ali, spritePaths } from '../lib/sprite';
+import { ali, hat, spritePaths } from '../lib/sprite';
 
 interface Props {
   /** Screen pixels per sprite pixel. */
@@ -9,18 +9,38 @@ interface Props {
 }
 
 const { scale = 8, label = 'Pixel-art Ali', class: className } = Astro.props;
-const paths = spritePaths(ali);
+const body = spritePaths(ali);
+// The hat lives in the seven rows above the head and only shows once the secret word is found.
+const topHat = spritePaths(hat, -hat.height);
+const top = hat.height;
 ---
 
 <svg
-  class={className}
-  viewBox={`0 0 ${ali.width} ${ali.height}`}
+  class:list={['avatar', className]}
+  data-avatar
+  viewBox={`0 ${-top} ${ali.width} ${ali.height + top}`}
   width={ali.width * scale}
-  height={ali.height * scale}
+  height={(ali.height + top) * scale}
   shape-rendering="crispEdges"
   role={label ? 'img' : undefined}
   aria-label={label || undefined}
   aria-hidden={label ? undefined : 'true'}
 >
-  {paths.map(({ fill, d }) => <path fill={fill} d={d} />)}
+  <g class="avatar-hat">{topHat.map(({ fill, d }) => <path fill={fill} d={d} />)}</g>
+  {body.map(({ fill, d }) => <path fill={fill} d={d} />)}
 </svg>
+
+<style>
+  .avatar-hat {
+    opacity: 0;
+    transform: translateY(-4px);
+    transition:
+      opacity 300ms ease,
+      transform 300ms ease;
+  }
+
+  :global(.is-magic) .avatar-hat {
+    opacity: 1;
+    transform: none;
+  }
+</style>

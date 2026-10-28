@@ -3,106 +3,112 @@ import { FALLBACK_READING } from '../lib/cold-read';
 import { person } from '../lib/profile';
 ---
 
-<div class="dialogue-frame px-corners">
-  <div class="dialogue px-corners" data-cold-read>
-    <p class="speaker">Ali</p>
+<div class="read panel" data-cold-read>
+  <!-- Screen readers get the finished text at once; the typed copy is decoration. -->
+  <div class="visually-hidden" aria-live="polite" data-sr></div>
 
-    <!-- Screen readers get the finished text at once; the typed copy is decoration. -->
-    <div class="visually-hidden" aria-live="polite" data-sr></div>
+  <p class="guess" data-guess>{FALLBACK_READING.guess}</p>
+  <p class="reveal" data-reveal>{FALLBACK_READING.reveal}</p>
 
-    <p class="guess" data-guess>{FALLBACK_READING.guess}</p>
-    <p class="reveal" data-reveal>{FALLBACK_READING.reveal}</p>
+  <div class="tells" data-tells hidden>
+    <ul class="chips" aria-label="What your browser told me" data-tell-list></ul>
+    <p class="tells-note">
+      All of it stays in your browser. <a href={`${person.source}/blob/master/src/lib/cold-read.ts`}>See how this trick is coded</a>.
+      That was Act I of eight. The program in the corner keeps count of the rest.
+    </p>
+  </div>
 
-    <details class="tells" data-tells hidden>
-      <summary>How did I know?</summary>
-      <ul data-tell-list></ul>
-      <p class="tells-note">All of it stays in your browser. Nothing is stored or sent anywhere.</p>
-    </details>
-
-    <div class="dialogue-foot">
-      <div class="btn-row">
-        <a class="btn btn--brass" href="#work">See the work</a>
-        <a class="btn btn--line-brass" href={`mailto:${person.email}`}>Email Ali</a>
-      </div>
-      <button class="skip-typing" type="button" data-skip aria-label="Show the whole message">
-        <svg class="caret" width="18" height="12" viewBox="0 0 6 4" shape-rendering="crispEdges" aria-hidden="true">
-          <path fill="currentColor" d="M0 0h6v1h-6zM1 1h4v1h-4zM2 2h2v1h-2z"></path>
-        </svg>
-      </button>
+  <div class="read-foot">
+    <div class="btn-row">
+      <a class="btn btn--brass" href="#work">See the work</a>
+      <a class="btn btn--line" href="#engineer">Show me a real trick</a>
     </div>
+    <button class="skip-typing" type="button" data-skip aria-label="Show the whole reading" data-sfx="none" hidden>
+      <svg width="18" height="12" viewBox="0 0 6 4" aria-hidden="true"><path fill="currentColor" d="M0 0h6L3 4z"></path></svg>
+    </button>
   </div>
 </div>
 
 <script>
-  import { coldRead, TAGLINES } from '../lib/cold-read';
+  import { coldRead, parseOS, TAGLINES } from '../lib/cold-read';
+  import { markSeen } from '../lib/acts';
+  import { sfx } from '../lib/audio';
 
-  const box = document.querySelector<HTMLElement>('[data-cold-read]');
-  if (box) run(box);
+  // Count visits once per real page load, not once per in-site navigation.
+  let visits = 1;
+  try {
+    visits = Number(localStorage.getItem('cold-read-visits') ?? '0') + 1;
+    localStorage.setItem('cold-read-visits', String(visits));
+  } catch {
+    /* private mode: treat it as a first visit */
+  }
+  const firstReferrer = document.referrer;
+  let performed = false;
 
-  function run(root: HTMLElement) {
+  document.addEventListener('astro:page-load', () => {
+    const root = document.querySelector<HTMLElement>('[data-cold-read]');
+    if (root) perform(root, performed);
+    if (root) performed = true;
+  });
+
+  function perform(root: HTMLElement, alreadySeen: boolean) {
     const guessEl = root.querySelector<HTMLElement>('[data-guess]')!;
     const revealEl = root.querySelector<HTMLElement>('[data-reveal]')!;
     const srEl = root.querySelector<HTMLElement>('[data-sr]')!;
-    const tellsEl = root.querySelector<HTMLDetailsElement>('[data-tells]')!;
+    const tellsEl = root.querySelector<HTMLElement>('[data-tells]')!;
     const tellList = root.querySelector<HTMLUListElement>('[data-tell-list]')!;
     const skip = root.querySelector<HTMLButtonElement>('[data-skip]')!;
 
-    let visits = 1;
-    try {
-      visits = Number(localStorage.getItem('cold-read-visits') ?? '0') + 1;
-      localStorage.setItem('cold-read-visits', String(visits));
-    } catch {
-      /* Private mode or storage blocked: treat it as a first visit. */
-    }
-
     const now = new Date();
+    const uaData = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData;
     const reading = coldRead({
       hour: now.getHours(),
       minute: now.getMinutes(),
       weekday: now.getDay(),
-      referrer: document.referrer,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
+      referrer: firstReferrer,
       search: location.search,
+      os: parseOS(navigator.userAgent, uaData?.platform ?? ''),
+      language: navigator.language ?? '',
       touch: matchMedia('(pointer: coarse)').matches,
       visits,
       prefersDark: matchMedia('(prefers-color-scheme: dark)').matches,
     });
 
-    // Let the rest of the page react to the link: the tagline changes per role.
     const tagline = document.querySelector<HTMLElement>('[data-tagline]');
     if (tagline && reading.tagline !== TAGLINES.fullstack) tagline.textContent = reading.tagline;
-    document.documentElement.dataset.role = reading.role;
 
     srEl.textContent = `${reading.guess} ${reading.reveal}`;
-    for (const tell of reading.tells) {
-      const li = document.createElement('li');
-      li.textContent = tell;
-      tellList.append(li);
-    }
+    tellList.replaceChildren(
+      ...reading.tells.map((t) => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        return li;
+      }),
+    );
 
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const finish = () => {
       guessEl.textContent = reading.guess;
       revealEl.textContent = reading.reveal;
-      revealEl.classList.remove('is-waiting');
       tellsEl.hidden = false;
       skip.hidden = true;
-      root.classList.add('is-done');
+      markSeen('cold-read');
     };
 
-    if (reduced) {
+    // Coming back to the home page within the same visit: no need to type it all again.
+    if (alreadySeen || matchMedia('(prefers-reduced-motion: reduce)').matches) {
       finish();
       return;
     }
 
     let stopped = false;
-    skip.addEventListener('click', () => {
+    skip.hidden = false;
+    skip.onclick = () => {
       stopped = true;
       finish();
-    });
-
+    };
     guessEl.textContent = '';
     revealEl.textContent = '';
-    revealEl.classList.add('is-waiting');
     guessEl.setAttribute('aria-hidden', 'true');
     revealEl.setAttribute('aria-hidden', 'true');
 
@@ -110,93 +116,76 @@ import { person } from '../lib/profile';
       new Promise<void>((resolve) => {
         let i = 0;
         const tick = () => {
-          if (stopped) return resolve();
+          if (stopped || !el.isConnected) return resolve();
           i += 1;
           el.textContent = text.slice(0, i);
-          if (i < text.length) setTimeout(tick, text.charAt(i - 1) === '.' ? delay * 14 : delay);
+          if (i % 3 === 0) sfx('tick');
+          if (i < text.length) setTimeout(tick, text.charAt(i - 1) === '.' ? delay * 12 : delay);
           else resolve();
         };
         setTimeout(tick, delay);
       });
 
-    // Wait for the curtain, then type.
     setTimeout(async () => {
-      await type(guessEl, reading.guess, 22);
+      await type(guessEl, reading.guess, 20);
       if (stopped) return;
-      await new Promise((r) => setTimeout(r, 450));
-      revealEl.classList.remove('is-waiting');
-      await type(revealEl, reading.reveal, 18);
-      if (!stopped) finish();
-    }, 1100);
+      await new Promise((r) => setTimeout(r, 400));
+      await type(revealEl, reading.reveal, 16);
+      if (!stopped) {
+        finish();
+        sfx('chime');
+      }
+    }, 500);
   }
 </script>
 
 <style>
-  .dialogue-frame {
-    background: var(--playbill);
-    padding: 4px;
-  }
-
-  .dialogue {
-    background: var(--ink);
-    padding: 26px clamp(20px, 3vw, 32px) 22px;
+  .read {
+    padding: 26px clamp(20px, 3vw, 30px);
     display: flex;
     flex-direction: column;
     gap: 14px;
-    text-align: left;
-  }
-
-  .speaker {
-    margin: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--brass);
+    box-shadow: 0 18px 40px rgba(4, 16, 19, 0.35);
   }
 
   .guess {
     margin: 0;
-    font-size: clamp(19px, 2vw, 23px);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(20px, 2vw, 23px);
     line-height: 1.5;
-    max-width: 62ch;
-    min-height: 3em;
+    min-height: 4.5em;
   }
 
   .reveal {
     margin: 0;
-    font-size: clamp(17px, 1.8vw, 19px);
     color: var(--muted);
-    max-width: 62ch;
     min-height: 1.6em;
   }
 
-  .tells summary {
-    width: fit-content;
-    cursor: pointer;
-    color: var(--brass);
-    font-size: 16px;
+  .tells {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  .tells ul {
-    margin: 10px 0 0;
-    padding-left: 22px;
-    list-style: square;
-    color: var(--playbill);
-    font-size: 16px;
+  .tells[hidden] {
+    display: none;
   }
 
   .tells-note {
-    margin: 8px 0 0;
-    color: var(--muted);
+    margin: 0;
     font-size: 15px;
+    color: var(--muted);
   }
 
-  .dialogue-foot {
+  .read-foot {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    margin-top: 6px;
+    gap: 12px;
+    margin-top: 4px;
   }
 
   .skip-typing {
@@ -204,28 +193,21 @@ import { person } from '../lib/profile';
     place-items: center;
     width: 44px;
     height: 44px;
-    padding: 0;
     border: 0;
+    border-radius: 50%;
     background: transparent;
     color: var(--brass);
     cursor: pointer;
+    animation: nudge 1.2s ease-in-out infinite;
   }
 
   .skip-typing[hidden] {
     display: none;
   }
 
-  .caret {
-    animation: blink 1s steps(2, start) infinite;
-  }
-
-  @keyframes blink {
-    to {
-      visibility: hidden;
+  @keyframes nudge {
+    50% {
+      transform: translateY(3px);
     }
-  }
-
-  :global(.no-js) .skip-typing {
-    display: none;
   }
 </style>

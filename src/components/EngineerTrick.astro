@@ -1,0 +1,330 @@
+---
+import { BITS, binaryCard } from '../lib/tricks';
+import { person } from '../lib/profile';
+
+const LETTERS = 'ABCDEF';
+const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!, numbers: binaryCard(bit) }));
+const source = `${person.source}/blob/master/src/lib/tricks.ts`;
+const tests = `${person.source}/blob/master/src/lib/tricks.test.ts`;
+---
+
+<section id="engineer" class="engineer" aria-labelledby="engineer-title" data-dwell="the engineer's trick">
+  <div class="wrap inner" data-engineer>
+    <div class="section-head">
+      <h2 id="engineer-title" class="display">Think of a number from 1 to 63.</h2>
+      <p>Keep it to yourself. Tick every card your number appears on, and I'll tell you what it is.</p>
+    </div>
+
+    <fieldset class="bcards">
+      <legend class="visually-hidden">Which cards is your number on?</legend>
+      {
+        cards.map((c) => (
+          <label class="bcard">
+            <input class="visually-hidden" type="checkbox" value={c.bit} data-bit />
+            <span class="bcard-head">
+              <span class="bcard-name">Card {c.letter}</span>
+              <span class="bcard-mark" aria-hidden="true" />
+            </span>
+            <span class="bcard-numbers">
+              {c.numbers.map((n) => (
+                <span>{n}</span>
+              ))}
+            </span>
+          </label>
+        ))
+      }
+    </fieldset>
+
+    <div class="controls">
+      <button class="btn btn--brass" type="button" data-read data-sfx="none">Read my mind</button>
+      <button class="btn btn--line" type="button" data-again hidden>Try another number</button>
+    </div>
+
+    <div class="answer" aria-live="polite" data-answer></div>
+
+    <div class="explain" data-explain hidden>
+      <div class="explain-copy">
+        <h3 class="display">How a senior engineer reads minds</h3>
+        <p>
+          Every card is one bit of a six-bit number. Card A holds every number with the 1s bit switched on, card B the 2s, and so
+          on up to card F and the 32s. When you tick cards, you spell your number in binary, and I add up the first number on each
+          card you ticked.
+        </p>
+        <p>
+          Six yes-or-no answers are enough to pick one number out of 64, because 2<sup>6</sup> is 64. It's the same arithmetic
+          behind feature flags and Unix permissions, and the reason <code>git bisect</code> can find the commit that broke
+          production in about ten steps out of a thousand. Halve the problem, every time.
+        </p>
+        <p class="links">
+          <a href={source}>Read the code</a>
+          <span aria-hidden="true">·</span>
+          <a href={tests}>And the tests that check every number from 1 to 63</a>
+        </p>
+      </div>
+      <pre class="code" tabindex="0" role="region" aria-label="The function that reads your mind"><code><span class="c">// src/lib/tricks.ts</span>
+<span class="k">export function</span> <span class="f">decodeBinary</span>(pickedBits: Iterable&lt;number&gt;): number {'{'}
+  <span class="k">let</span> n = 0;
+  <span class="k">for</span> (<span class="k">const</span> bit <span class="k">of</span> pickedBits) n |= 1 &lt;&lt; bit;
+  <span class="k">return</span> n;
+{'}'}</code></pre>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { markSeen } from '../lib/acts';
+  import { sfx } from '../lib/audio';
+  import { decodeBinary } from '../lib/tricks';
+
+  document.addEventListener('click', (e) => {
+    const root = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-engineer]') : null;
+    if (!root) return;
+    const answer = root.querySelector<HTMLElement>('[data-answer]')!;
+    const explain = root.querySelector<HTMLElement>('[data-explain]')!;
+    const again = root.querySelector<HTMLButtonElement>('[data-again]')!;
+    const boxes = [...root.querySelectorAll<HTMLInputElement>('[data-bit]')];
+
+    if ((e.target as Element).closest('[data-read]')) {
+      const bits = boxes.filter((b) => b.checked).map((b) => Number(b.value));
+      if (bits.length === 0) {
+        answer.innerHTML = '';
+        const p = document.createElement('p');
+        p.className = 'answer-note';
+        p.textContent = "You haven't ticked anything. Either your number is 0, which is cheating, or you're testing me.";
+        answer.append(p);
+        sfx('click');
+        return;
+      }
+      const n = decodeBinary(bits);
+      answer.innerHTML = '';
+      const lead = document.createElement('p');
+      lead.className = 'answer-lead';
+      lead.textContent = 'Your number is';
+      const num = document.createElement('p');
+      num.className = 'answer-number display';
+      num.textContent = String(n);
+      const note = document.createElement('p');
+      note.className = 'answer-note';
+      note.textContent = "If that's wrong, a card got ticked by mistake. Check them and I'll try again.";
+      answer.append(lead, num, note);
+      explain.hidden = false;
+      again.hidden = false;
+      sfx('reveal');
+      markSeen('engineer');
+    }
+
+    if ((e.target as Element).closest('[data-again]')) {
+      boxes.forEach((b) => (b.checked = false));
+      answer.innerHTML = '';
+      again.hidden = true;
+      boxes[0]?.focus();
+    }
+  });
+
+  document.addEventListener('change', (e) => {
+    if (e.target instanceof HTMLInputElement && e.target.matches('[data-bit]')) sfx('flip');
+  });
+</script>
+
+<style>
+  .engineer {
+    background: var(--bg-deep);
+  }
+
+  .inner {
+    padding-block: 88px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .inner .section-head {
+    margin-bottom: 0;
+  }
+
+  .bcards {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(168px, 100%), 1fr));
+    gap: 16px;
+  }
+
+  .bcard {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 14px 16px;
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--card-ink);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    transition:
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .bcard:hover {
+    transform: translateY(-3px);
+  }
+
+  .bcard:has(input:checked) {
+    box-shadow:
+      0 0 0 3px var(--brass),
+      0 14px 28px rgba(0, 0, 0, 0.35);
+    transform: translateY(-6px);
+  }
+
+  .bcard:has(input:focus-visible) {
+    outline: 3px solid var(--brass);
+    outline-offset: 4px;
+  }
+
+  .bcard-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .bcard-name {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 600;
+  }
+
+  .bcard-mark {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #8d8778;
+  }
+
+  .bcard:has(input:checked) .bcard-mark {
+    border-color: var(--card-red);
+    background: var(--card-red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3L15 6.5' fill='none' stroke='white' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+  }
+
+  .bcard-numbers {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 2px 4px;
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .controls [hidden] {
+    display: none;
+  }
+
+  .answer:empty {
+    display: none;
+  }
+
+  .answer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 18px;
+  }
+
+  .answer :global(.answer-lead) {
+    margin: 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 26px;
+  }
+
+  .answer :global(.answer-number) {
+    margin: 0;
+    font-size: clamp(72px, 10vw, 120px);
+    color: var(--brass);
+    animation: pop 500ms cubic-bezier(0.2, 1.4, 0.4, 1);
+  }
+
+  .answer :global(.answer-note) {
+    flex-basis: 100%;
+    margin: 0;
+    color: var(--muted);
+  }
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+  }
+
+  .explain {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 28px 40px;
+    padding: 28px clamp(20px, 3vw, 32px);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  .explain[hidden] {
+    display: none;
+  }
+
+  .explain-copy {
+    flex: 1 1 420px;
+    min-width: 0;
+  }
+
+  .explain h3 {
+    margin: 0 0 12px;
+    font-size: 30px;
+  }
+
+  .explain p {
+    margin: 0 0 12px;
+  }
+
+  .explain code {
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.9em;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+
+  .code {
+    flex: 1 1 360px;
+    min-width: 0;
+    margin: 0;
+    padding: 20px 22px;
+    overflow-x: auto;
+    border-radius: 12px;
+    background: var(--bg-deep);
+    color: #d6e3dd;
+    font: 15px/1.6 ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    align-self: center;
+  }
+
+  .code .c {
+    color: #8fa8a0;
+  }
+
+  .code .k {
+    color: var(--rose);
+  }
+
+  .code .f {
+    color: var(--brass);
+  }
+</style>

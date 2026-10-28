@@ -12,7 +12,8 @@ outcome: 300,000+ public-domain books with the metadata the app needed, plus fas
 stack: [Python, OpenAI API, Supabase, PostgreSQL, CSV pipelines]
 cover: ../../assets/work/booktok.png
 coverAlt: A book library screen with shelves of classic titles such as Pride and Prejudice, Frankenstein and Moby Dick.
-suit: shelf
+encore: number
+label: the 300,000-book pipeline
 links:
   - label: Book Topics Assigner on GitHub
     href: https://github.com/alikonainofficial/book-topics-assigner

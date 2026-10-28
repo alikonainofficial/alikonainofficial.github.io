@@ -74,8 +74,29 @@ export const ali: Sprite = {
   },
 };
 
-/** Turn a sprite into one path per colour. Transparent cells are '.'. */
-export function spritePaths(sprite: Sprite): SpritePath[] {
+/** A magician's top hat that sits on Ali's head when someone finds the secret word. Drawn in rows -7 to -1. */
+export const hat: Sprite = {
+  width: 20,
+  height: 7,
+  grid: [
+    '......KKKKKKKK......',
+    '......KTTTTtTK......',
+    '......KTTTTtTK......',
+    '......KTTTTtTK......',
+    '......KBBBBBBK......',
+    '...KKKKKKKKKKKKKK...',
+    '...KTTTTTTTTTTTTK...',
+  ],
+  palette: {
+    K: '#101014',
+    T: '#26262e',
+    t: '#3a3a46',
+    B: '#d9b36c',
+  },
+};
+
+/** Turn a sprite into one path per colour. Transparent cells are '.'. offsetY shifts every row. */
+export function spritePaths(sprite: Sprite, offsetY = 0): SpritePath[] {
   const byColour = new Map<string, string[]>();
 
   sprite.grid.forEach((row, y) => {
@@ -95,7 +116,7 @@ export function spritePaths(sprite: Sprite): SpritePath[] {
       while (end < row.length && row.charAt(end) !== '.' && sprite.palette[row.charAt(end)] === fill) end += 1;
       const run = end - x;
       const segments = byColour.get(fill) ?? [];
-      segments.push(`M${x} ${y}h${run}v1h-${run}z`);
+      segments.push(`M${x} ${y + offsetY}h${run}v1h-${run}z`);
       byColour.set(fill, segments);
       x = end;
     }

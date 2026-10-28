@@ -24,7 +24,10 @@ const work = defineCollection({
       coverAlt: z.string(),
       gallery: z.array(z.object({ src: image(), alt: z.string(), caption: z.string().optional() })).default([]),
       links: z.array(z.object({ label: z.string(), href: z.url() })).default([]),
-      suit: z.enum(['book', 'screen', 'lens', 'shelf']),
+      /** The encore this case file performs first. */
+      encore: z.enum(['vanish', 'number', 'eleven']),
+      /** How the tricks refer to this project mid-sentence, e.g. "the AI ad pipeline". */
+      label: z.string(),
     }),
 });
 

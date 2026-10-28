@@ -12,7 +12,8 @@ outcome: Fewer reported setup errors, a more reliable tool, and a direct line fo
 stack: [React, JavaScript, Chrome extension, Figma, Docker]
 cover: ../../assets/work/pubguru-ad-inspector.png
 coverAlt: The PubGuru Ad Inspector panel over a publisher's site, showing ad units, bidders and optimisation warnings.
-suit: lens
+encore: vanish
+label: the Ad Inspector
 links:
   - label: View in the Chrome Web Store
     href: https://chromewebstore.google.com/detail/pubguru-ad-inspector/nnoilpdinmjmdfpkdkbbkajejflbkoma

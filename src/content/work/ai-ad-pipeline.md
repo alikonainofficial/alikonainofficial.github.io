@@ -12,7 +12,8 @@ outcome: About 10,000 ads generated so far, with peak days near 1,000, and the m
 stack: [Next.js, TypeScript, FastAPI, Python, LLM and media-generation APIs, Gemini, Google Sheets and Drive, Railway, Vercel]
 cover: ../../assets/work/ad-pipeline-dashboard.jpg
 coverAlt: The VideoCloner dashboard, listing ad formats such as UGC ads, animated stories and cinematic ads, each with an estimated cost range.
-suit: screen
+encore: vanish
+label: the AI ad pipeline
 gallery:
   - src: ../../assets/work/ad-pipeline-dashboard-wide.jpg
     alt: The full sidebar of VideoCloner, grouping pipelines into create from video, create from brief, and utilities.

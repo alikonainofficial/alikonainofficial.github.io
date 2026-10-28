@@ -1,69 +1,38 @@
 ---
 import { person } from '../lib/profile';
-
-interface Props {
-  line?: string;
-}
-
-const { line = "For my next trick, I'll guess what you do after reading this." } = Astro.props;
 ---
 
-<footer id="contact" class="site-footer">
-  <div class="wrap footer-main">
-    <p class="display footer-line">{line}</p>
-    <div class="btn-row">
-      <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>
-      <a class="btn btn--line" href={person.linkedin}>LinkedIn</a>
-      <a class="btn btn--line" href={person.github}>GitHub</a>
-    </div>
-  </div>
+<footer class="site-footer">
   <div class="wrap footer-small">
     <p>
-      {person.email}, {person.location}.
+      <a href={`mailto:${person.email}`}>{person.email}</a>, {person.location}.
     </p>
     <p>
-      No cookies and no tracking: the cold read happens in your browser and stays there. Built with Astro, hosted on GitHub Pages,
-      and the <a href={person.source}>source is on GitHub</a>.
+      No cookies and no tracking. Every trick happens in your browser and stays there. The music is played live by your
+      browser too, no recordings. Built with Astro, hosted on GitHub Pages, and the <a href={person.source}>source is on GitHub</a>.
     </p>
   </div>
 </footer>
 
 <style>
   .site-footer {
-    background: var(--ink);
-    border-top: 8px solid var(--brass);
-  }
-
-  .footer-main {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 32px;
-    padding-block: 64px 40px;
-  }
-
-  .footer-line {
-    margin: 0;
-    max-width: 30ch;
-    font-size: clamp(34px, 4vw, 48px);
-    line-height: 1.05;
-    color: var(--brass);
+    border-top: 1px solid var(--line);
+    background: var(--bg-deep);
   }
 
   .footer-small {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 8px 32px;
-    padding-block: 20px 36px;
-    border-top: 2px solid var(--ink-soft);
+    gap: 8px 40px;
+    /* Leave room for the program button in the corner. */
+    padding-block: 28px calc(92px + env(safe-area-inset-bottom, 0px));
     font-size: 15px;
     color: var(--muted);
   }
 
   .footer-small p {
     margin: 0;
-    max-width: 70ch;
+    max-width: 72ch;
   }
 </style>

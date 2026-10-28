@@ -12,7 +12,8 @@ outcome: A live reading app at booktokapp.com, with streaming-style shelves and 
 stack: [Supabase, PostgreSQL, Row Level Security, Edge Functions]
 cover: ../../assets/work/booktok.png
 coverAlt: The BookTok library, with suggested books and popular titles arranged in streaming-style shelves.
-suit: book
+encore: eleven
+label: BookTok
 links:
   - label: Open booktokapp.com
     href: https://booktokapp.com/

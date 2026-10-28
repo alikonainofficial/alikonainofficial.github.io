@@ -3,14 +3,16 @@
  *
  * A stage mentalist "reads" a stranger from small, observable details, then
  * admits there was no magic involved. This module does the same with details a
- * browser already exposes to every page it opens: local time, the page that
- * linked here, the kind of screen, and the query string of the link itself.
+ * browser already shares with every page it opens: the clock's time zone and
+ * local time, the page that linked here, the operating system, the language,
+ * the colour scheme, and the query string of the link itself.
  *
  * Everything is pure and runs on the client. Nothing is stored or sent anywhere,
  * apart from a visit counter that stays in the visitor's own localStorage.
  */
 
 export type Role = 'fullstack' | 'ai' | 'fde';
+export type OS = 'mac' | 'windows' | 'iphone' | 'ipad' | 'android' | 'linux' | 'chromeos';
 
 export type Source =
   | { kind: 'none' }
@@ -28,10 +30,16 @@ export interface Signals {
   minute: number;
   /** 0 is Sunday, as in Date#getDay. */
   weekday: number;
+  /** IANA time zone, e.g. "Europe/Amsterdam". Empty when unknown. */
+  timeZone: string;
   /** document.referrer, or an empty string. */
   referrer: string;
   /** location.search of the current page. */
   search: string;
+  /** From parseOS(); null when unknown. */
+  os: OS | null;
+  /** navigator.language, e.g. "en-GB". */
+  language: string;
   /** True when the primary pointer is coarse (a phone or tablet). */
   touch: boolean;
   /** Visits from this browser, including this one. */
@@ -43,7 +51,7 @@ export interface Reading {
   role: Role;
   company: string | null;
   tagline: string;
-  /** The read itself: one or two sentences of confident guessing. */
+  /** The read itself: a couple of sentences of confident guessing. */
   guess: string;
   /** The admission that follows every good trick. */
   reveal: string;
@@ -81,8 +89,18 @@ const JOB_HOSTS = [
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
 
+const DEVICE: Record<OS, string> = {
+  mac: 'a Mac',
+  windows: 'a Windows machine',
+  iphone: 'an iPhone',
+  ipad: 'an iPad',
+  android: 'an Android phone',
+  linux: 'a Linux machine',
+  chromeos: 'a Chromebook',
+};
+
 export const TAGLINES: Record<Role, string> = {
-  fullstack: 'Senior full-stack engineer. I ship AI that holds up in production, and I automate the tedious parts at scale.',
+  fullstack: 'Senior full-stack engineer in Lahore. I ship AI that holds up in production and automate the tedious parts at scale.',
   ai: 'Senior full-stack engineer building AI products: the generation pipelines, the quality checks, and the app around them.',
   fde: 'Senior full-stack engineer who works next to the people using the software and turns messy workflows into tools that run.',
 };
@@ -106,6 +124,37 @@ export function cleanCompany(value: string | null | undefined): string | null {
   return cleaned.length > 0 ? cleaned : null;
 }
 
+/** "Europe/Amsterdam" becomes "Amsterdam"; zones that aren't places (UTC, Etc/GMT+5) give null. */
+export function cityFromTimeZone(tz: string): string | null {
+  if (!tz || !tz.includes('/') || tz.startsWith('Etc/')) return null;
+  const last = tz.split('/').pop() ?? '';
+  const city = last.replace(/_/g, ' ').trim();
+  return city.length > 0 ? city : null;
+}
+
+/** Best-effort OS from the user agent (and the newer platform hint when the browser offers it). */
+export function parseOS(userAgent: string, platformHint = ''): OS | null {
+  const ua = userAgent.toLowerCase();
+  const hint = platformHint.toLowerCase();
+  if (ua.includes('iphone')) return 'iphone';
+  if (ua.includes('ipad')) return 'ipad';
+  if (ua.includes('android')) return 'android';
+  if (ua.includes('cros') || hint === 'chrome os' || hint === 'chromeos') return 'chromeos';
+  if (hint === 'macos' || ua.includes('mac os x') || ua.includes('macintosh')) return 'mac';
+  if (hint === 'windows' || ua.includes('windows')) return 'windows';
+  if (hint === 'linux' || ua.includes('linux')) return 'linux';
+  return null;
+}
+
+/** "en-NL" becomes "English (Netherlands)", where the browser can name it. */
+export function languageName(tag: string): string {
+  try {
+    return new Intl.DisplayNames(['en'], { type: 'language' }).of(tag) ?? tag;
+  } catch {
+    return tag;
+  }
+}
+
 export function classifyReferrer(referrer: string): Source {
   if (!referrer) return { kind: 'none' };
   let host: string;
@@ -122,8 +171,7 @@ export function classifyReferrer(referrer: string): Source {
   return { kind: 'other', host };
 }
 
-function sourceClause(source: Source, company: string | null): string {
-  if (company) return `You're at ${company}, and you opened the link I sent with my application`;
+function sourceClause(source: Source): string {
   switch (source.kind) {
     case 'linkedin':
       return 'You came here from LinkedIn';
@@ -136,23 +184,21 @@ function sourceClause(source: Source, company: string | null): string {
     case 'other':
       return `You came over from ${source.host}`;
     case 'self':
-      return "You've already been poking around the site";
+      return "You've already been looking around";
     case 'none':
-      return 'You opened this from somewhere that leaves no trail, so my bet is a PDF or an email';
+      return 'Nobody linked you here, so my bet is a PDF or an email';
   }
 }
 
-function timeClause(hour: number, weekday: number): string {
-  let when: string;
-  if (hour < 5) when = "it's past midnight where you are";
-  else if (hour < 8) when = "it's early morning where you are";
-  else if (hour < 12) when = "it's morning where you are";
-  else if (hour < 14) when = "it's around lunch where you are";
-  else if (hour < 18) when = "it's mid-afternoon where you are";
-  else if (hour < 22) when = "it's evening where you are";
-  else when = "it's getting late where you are";
-  const weekend = weekday === 0 || weekday === 6;
-  return weekend ? `${when}, on a weekend no less` : when;
+function timeOfDay(hour: number): string {
+  if (hour === 0) return 'just after midnight';
+  if (hour < 5) return 'the middle of the night';
+  if (hour < 8) return 'early morning';
+  if (hour < 12) return 'mid-morning';
+  if (hour < 14) return 'around lunchtime';
+  if (hour < 18) return 'the afternoon';
+  if (hour < 22) return 'evening';
+  return 'late evening';
 }
 
 /** "a", "a and b", "a, b, and c" */
@@ -162,15 +208,8 @@ export function joinClauses(items: string[]): string {
   return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
 }
 
-function extraSentence(role: Role, visits: number, prefersDark: boolean): string | null {
-  if (role === 'ai') return "And you're hiring for AI work, which is most of what I've been building lately.";
-  if (role === 'fde') return 'And you need someone who can sit with the people using the software and ship what they actually need.';
-  if (visits > 1) return "And you've been here before. Welcome back.";
-  if (prefersDark) return 'You also prefer dark mode. We have that in common.';
-  return null;
-}
-
 const pad = (n: number) => String(n).padStart(2, '0');
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function coldRead(signals: Signals): Reading {
   const params = new URLSearchParams(signals.search);
@@ -178,33 +217,58 @@ export function coldRead(signals: Signals): Reading {
   const company = cleanCompany(params.get('co'));
   const source = classifyReferrer(signals.referrer);
   const fromLink = company !== null || params.has('for');
+  const city = cityFromTimeZone(signals.timeZone);
+  const weekend = signals.weekday === 0 || signals.weekday === 6;
+  const day = DAYS[signals.weekday] ?? 'today';
 
-  const clauses = [sourceClause(source, company), timeClause(signals.hour, signals.weekday)];
-  if (signals.touch) clauses.push("you're reading this on your phone");
+  const sentences: string[] = [];
 
-  const extra = extraSentence(role, signals.visits, signals.prefersDark);
-  const guess = `Let me guess. ${joinClauses(clauses)}.${extra ? ` ${extra}` : ''}`;
+  // Where and when.
+  const when = `it's ${timeOfDay(signals.hour)}${weekend ? ` on a ${day}` : ''}`;
+  const place = city ? `You're in ${city}, or somewhere on ${city} time, and ${when}` : `${cap(when)} where you are`;
+
+  if (company) {
+    sentences.push(`You're at ${company}, and you opened the link I sent with my application`);
+    sentences.push(place);
+  } else {
+    sentences.push(place);
+  }
+
+  // How they got here and what they're holding.
+  const device = signals.os ? DEVICE[signals.os] : signals.touch ? 'your phone' : null;
+  const holding = device ? `you're on ${device}${signals.prefersDark ? ' with dark mode on' : ''}` : null;
+  if (!company) sentences.push(holding ? joinClauses([sourceClause(source), holding]) : sourceClause(source));
+  else if (holding) sentences.push(cap(holding));
+
+  // One extra detail, if there's a good one.
+  const lang = signals.language.toLowerCase();
+  let extra: string | null = null;
+  if (role === 'ai') extra = "And you're hiring for AI work, which is most of what I've been building lately.";
+  else if (role === 'fde') extra = 'And you need someone who can sit with the people using the software and ship what they actually need.';
+  else if (signals.visits > 1) extra = "And you've been here before. Welcome back.";
+  else if (lang && !lang.startsWith('en')) extra = `${languageName(signals.language.split('-')[0] ?? signals.language)} is your browser's first language, so thank you for reading this in English.`;
+
+  const guess = `Let me guess. ${sentences.map((s) => `${s}.`).join(' ')}${extra ? ` ${extra}` : ''}`;
 
   const reveal = fromLink
-    ? "Relax, I'm not psychic. The link I sent you told me half of that, and your browser told me the rest. Noticing details is most of my job."
-    : "Relax, I'm not psychic. Your browser told me. Noticing the small details is most of my job.";
+    ? "Relax, I'm not psychic. The link I sent you told me half of that, and your browser told me the rest. Want to see a real trick?"
+    : "Relax, I'm not psychic. Your browser told me all of that. Want to see a real trick?";
 
-  const day = DAYS[signals.weekday] ?? 'today';
   const tells = [
-    `Your local time: ${pad(signals.hour)}:${pad(signals.minute)} on a ${day}.`,
+    `Clock: ${signals.timeZone || 'unknown time zone'}, ${pad(signals.hour)}:${pad(signals.minute)} on a ${day}`,
     source.kind === 'none'
-      ? 'No referring page, which usually means a PDF, an email or a bookmark.'
+      ? 'No referring page'
       : source.kind === 'self'
-        ? 'You arrived from another page on this site.'
-        : `The page that sent you: ${referrerHost(signals.referrer)}.`,
-    signals.touch ? 'Your screen is a touch screen.' : 'You are using a mouse or trackpad.',
+        ? 'Came from another page on this site'
+        : `Came from ${referrerHost(signals.referrer)}`,
+    [signals.os ? DEVICE[signals.os].replace(/^an? /, '') : signals.touch ? 'Touch screen' : 'Mouse or trackpad', signals.prefersDark ? 'dark mode' : 'light mode'].join(', '),
+    `Reads ${signals.language ? languageName(signals.language) : 'an unknown language'}`,
+    signals.visits > 1 ? `Visit number ${signals.visits}, counted on your device only` : 'First visit',
   ];
   if (fromLink) {
     const parts = [params.has('for') ? `for=${params.get('for')}` : null, company ? `co=${company}` : null].filter(Boolean);
-    tells.push(`The link itself carries ${parts.join(' and ')}.`);
+    tells.push(`The link carries ${parts.join(' and ')}`);
   }
-  if (signals.visits > 1) tells.push(`This browser has visited ${signals.visits} times. That count stays on your device.`);
-  if (signals.prefersDark) tells.push('Your system is set to dark mode.');
 
   return { role, company, tagline: TAGLINES[role], guess, reveal, tells };
 }
@@ -220,5 +284,5 @@ function referrerHost(referrer: string): string {
 /** What visitors without JavaScript (and search engines) see. */
 export const FALLBACK_READING: Pick<Reading, 'guess' | 'reveal'> = {
   guess: "Let me guess. You're hiring, you're busy, and this isn't the first portfolio you've opened today.",
-  reveal: "Relax, I'm not psychic. That one is true of almost everyone reading this. Turn on JavaScript and I'll do better.",
+  reveal: "Relax, I'm not psychic. That one is true of almost everyone reading this. Turn on JavaScript and I'll do much better.",
 };

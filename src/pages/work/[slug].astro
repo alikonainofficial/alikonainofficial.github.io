@@ -5,7 +5,8 @@ import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import SiteHeader from '../../components/SiteHeader.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
-import Suit from '../../components/Suit.astro';
+import Encore from '../../components/Encore.astro';
+import { person } from '../../lib/profile';
 
 export const getStaticPaths = (async () => {
   const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
@@ -22,34 +23,32 @@ const d = entry.data;
 
 <Base title={d.title} description={d.summary}>
   <SiteHeader />
-  <main id="main" class="case wrap">
-    <a class="back" href="/#work">Back to the deck</a>
+  <main id="main" class="case wrap" data-case={entry.id} data-dwell={`the case file for ${d.label}`}>
+    <a class="back" href="/#work"><span aria-hidden="true">←</span> All the work</a>
 
     <header class="case-head">
-      <Suit name={d.suit} size={48} />
+      <p class="case-meta">{d.company}, {d.period.toLowerCase()}</p>
       <h1 class="display">{d.title}</h1>
-      <p class="case-meta">{d.company}, {d.period.toLowerCase()}. {d.role}.</p>
+      <p class="case-role">{d.role}.</p>
     </header>
 
-    <section class="dossier-frame px-corners" aria-label="Case file summary">
-      <dl class="dossier">
-        <div>
-          <dt>Objective</dt>
-          <dd>{d.objective}</dd>
-        </div>
-        <div>
-          <dt>Deployed</dt>
-          <dd>{d.deployed}</dd>
-        </div>
-        <div>
-          <dt>Outcome</dt>
-          <dd>{d.outcome}</dd>
-        </div>
-      </dl>
-    </section>
+    <dl class="dossier panel" aria-label="Case file summary">
+      <div>
+        <dt>Objective</dt>
+        <dd>{d.objective}</dd>
+      </div>
+      <div>
+        <dt>Deployed</dt>
+        <dd>{d.deployed}</dd>
+      </div>
+      <div>
+        <dt>Outcome</dt>
+        <dd>{d.outcome}</dd>
+      </div>
+    </dl>
 
     <figure class="shot">
-      <Image src={d.cover} alt={d.coverAlt} widths={[640, 960, 1280]} sizes="(min-width: 960px) 880px, 92vw" />
+      <Image src={d.cover} alt={d.coverAlt} widths={[640, 960, 1280]} sizes="(min-width: 960px) 900px, 92vw" />
     </figure>
 
     <article class="prose">
@@ -61,7 +60,7 @@ const d = entry.data;
         <section class="gallery" aria-label="More screenshots">
           {d.gallery.map((g) => (
             <figure class="shot">
-              <Image src={g.src} alt={g.alt} widths={[640, 960]} sizes="(min-width: 960px) 880px, 92vw" loading="lazy" />
+              <Image src={g.src} alt={g.alt} widths={[640, 960]} sizes="(min-width: 960px) 900px, 92vw" loading="lazy" />
               {g.caption && <figcaption>{g.caption}</figcaption>}
             </figure>
           ))}
@@ -70,7 +69,7 @@ const d = entry.data;
     }
 
     <section class="kit" aria-labelledby="kit-title">
-      <h2 id="kit-title">Kit</h2>
+      <h2 id="kit-title" class="display">The kit</h2>
       <ul class="chips">
         {d.stack.map((s) => <li>{s}</li>)}
       </ul>
@@ -78,7 +77,7 @@ const d = entry.data;
         d.links.length > 0 && (
           <div class="btn-row">
             {d.links.map((l) => (
-              <a class="btn btn--line-brass" href={l.href}>
+              <a class="btn btn--line" href={l.href}>
                 {l.label}
               </a>
             ))}
@@ -87,68 +86,101 @@ const d = entry.data;
       }
     </section>
 
+    <Encore favourite={d.encore} />
+
     <nav class="next" aria-label="Next case file">
       <a href={`/work/${next.id}/`}>
-        <span class="next-label">Next card</span>
-        <span class="display next-title">{next.data.title}</span>
+        <span class="next-label">Next case file</span>
+        <span class="display next-title">{next.data.title} <span aria-hidden="true">→</span></span>
       </a>
     </nav>
+
+    <section class="talk panel" aria-labelledby="talk-title">
+      <h2 id="talk-title" class="display">Seen enough of the trick? Let's talk about the job.</h2>
+      <div class="btn-row">
+        <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>
+        <a class="btn btn--line" href={person.linkedin}>LinkedIn</a>
+        <a class="btn btn--line" href="/resume/">The plain résumé</a>
+      </div>
+    </section>
   </main>
-  <SiteFooter line="Seen enough of the trick? Let's talk about the job." />
+  <SiteFooter />
 </Base>
+
+<script>
+  import { markSeen } from '../../lib/acts';
+  import { saveSession, session, toast } from '../../lib/client';
+  import { duration, times } from '../../lib/tricks';
+
+  // Act II, the payoff: say what happened before they picked this card on the home page.
+  document.addEventListener('astro:page-load', () => {
+    const page = document.querySelector<HTMLElement>('[data-case]');
+    const picked = session<{ id: string; hovers: number; looked: number } | null>('picked', null);
+    if (!page || !picked || picked.id !== page.dataset.case) return;
+    saveSession('picked', null);
+    let line: string;
+    if (picked.hovers >= 2) line = `You hovered over this card ${times(picked.hovers)} before you picked it. I had a feeling you would.`;
+    else if (picked.looked >= 3000) line = `You looked at this card for ${duration(picked.looked)} before you picked it. I had a feeling you would.`;
+    else line = 'Straight to this one, no hesitation. I had a feeling.';
+    setTimeout(() => {
+      toast(line, 'reveal');
+      markSeen('hover-tell');
+    }, 900);
+  });
+</script>
 
 <style>
   .case {
-    max-width: 960px;
-    padding-block: 32px 96px;
+    max-width: 980px;
+    padding-block: 24px 88px;
   }
 
   .back {
     display: inline-flex;
     align-items: center;
+    gap: 8px;
     min-height: 44px;
     color: var(--muted);
+    text-decoration: none;
+  }
+
+  .back:hover {
+    color: var(--text);
   }
 
   .case-head {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
     margin: 24px 0 36px;
-    color: var(--brass);
+  }
+
+  .case-meta,
+  .case-role {
+    margin: 0;
+    color: var(--muted);
+    font-size: 19px;
   }
 
   .case-head h1 {
     margin: 0;
-    font-size: clamp(56px, 8vw, 104px);
-    color: var(--brass);
-  }
-
-  .case-meta {
-    margin: 0;
-    font-size: 19px;
-    color: var(--muted);
-  }
-
-  .dossier-frame {
-    background: var(--playbill);
-    color: var(--ink);
-    padding: clamp(22px, 3vw, 32px);
+    font-size: clamp(52px, 8vw, 96px);
   }
 
   .dossier {
     margin: 0;
+    padding: clamp(22px, 3vw, 32px);
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
     gap: 20px 32px;
   }
 
   .dossier dt {
-    font-family: var(--font-display);
-    font-size: 30px;
-    line-height: 1;
-    color: var(--velvet-light);
     margin-bottom: 6px;
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1.1;
+    color: var(--brass);
   }
 
   .dossier dd {
@@ -163,28 +195,27 @@ const d = entry.data;
   .shot :global(img) {
     width: 100%;
     height: auto;
-    border: 4px solid var(--playbill);
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgba(4, 16, 19, 0.45);
   }
 
   .shot figcaption {
-    margin-top: 10px;
+    margin-top: 12px;
     font-size: 16px;
     color: var(--muted);
   }
 
   .prose {
     max-width: 68ch;
-    margin-top: 48px;
-    font-size: 18px;
+    margin-top: 56px;
   }
 
   .prose :global(h2) {
     margin: 48px 0 12px;
     font-family: var(--font-display);
-    font-weight: 400;
-    font-size: 40px;
-    line-height: 1;
-    color: var(--brass);
+    font-weight: 500;
+    font-size: 36px;
+    line-height: 1.1;
   }
 
   .prose :global(h2:first-child) {
@@ -193,12 +224,11 @@ const d = entry.data;
 
   .prose :global(p),
   .prose :global(li) {
-    line-height: 1.65;
+    line-height: 1.7;
   }
 
   .prose :global(ul) {
     padding-left: 22px;
-    list-style: square;
   }
 
   .prose :global(li + li) {
@@ -210,7 +240,7 @@ const d = entry.data;
   }
 
   .prose :global(strong) {
-    color: var(--brass);
+    color: var(--brass-hi);
     font-weight: 600;
   }
 
@@ -227,16 +257,13 @@ const d = entry.data;
 
   .kit h2 {
     margin: 0;
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: 40px;
-    color: var(--brass);
+    font-size: 36px;
   }
 
   .next {
-    margin-top: 72px;
-    border-top: 3px dotted var(--velvet-light);
+    margin-top: 56px;
     padding-top: 24px;
+    border-top: 1px solid var(--line);
   }
 
   .next a {
@@ -252,11 +279,26 @@ const d = entry.data;
   }
 
   .next-title {
-    font-size: clamp(40px, 5vw, 56px);
-    color: var(--brass);
+    font-size: clamp(34px, 5vw, 52px);
+    color: var(--text);
   }
 
   .next a:hover .next-title {
-    color: var(--playbill);
+    color: var(--brass);
+  }
+
+  .talk {
+    margin-top: 56px;
+    padding: clamp(24px, 4vw, 36px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .talk h2 {
+    margin: 0;
+    max-width: 22ch;
+    font-size: clamp(30px, 3.6vw, 40px);
+    line-height: 1.15;
   }
 </style>

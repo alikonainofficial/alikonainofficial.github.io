@@ -1,0 +1,149 @@
+---
+import { acts, education, timeInProduction } from '../lib/profile';
+import Avatar from './Avatar.astro';
+
+const { years } = timeInProduction();
+---
+
+<section id="story" class="story wrap" aria-labelledby="story-title" data-dwell="my story">
+  <div class="setlist">
+    <div class="section-head">
+      <h2 id="story-title" class="display">The set list</h2>
+      <p>{years}+ years in production, most recent first.</p>
+    </div>
+    <ol class="sets">
+      {
+        acts.map((act) => (
+          <li class="set">
+            <span class="dates">
+              {act.start} to {act.end}
+            </span>
+            <span class="set-body">
+              <span class="set-title">
+                {act.role}, <span class="company">{act.company}</span>
+              </span>
+              <span class="set-line">{act.line}</span>
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+    <p class="education">
+      Studied at {
+        education.map((e, i) => (
+          <>
+            {i > 0 && ' and '}
+            {e.school.split(',')[0]} ({e.degree.replace('Master of Business Administration', 'MBA')})
+          </>
+        ))
+      }.
+    </p>
+  </div>
+
+  <aside class="offstage panel" aria-labelledby="offstage-title">
+    <div class="offstage-head">
+      <Avatar scale={3} label="" class="offstage-avatar" />
+      <h2 id="offstage-title" class="display">Between sets</h2>
+    </div>
+    <ul>
+      <li>280+ anime and 35+ manga. One Piece, Berserk and Code Geass are all tens.</li>
+      <li>Pokémon, Halo and God of War, on repeat.</li>
+      <li>The gym, every day.</li>
+      <li>Cooking for a cat who never says thanks.</li>
+      <li>A beginner's interest in mentalism and hypnosis, which explains tonight's program.</li>
+    </ul>
+  </aside>
+</section>
+
+<style>
+  .story {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 40px 56px;
+    padding-block: 88px;
+  }
+
+  .setlist {
+    flex: 2 1 560px;
+    min-width: 0;
+  }
+
+  .sets {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .set {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 4px 24px;
+    padding-block: 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .dates {
+    color: var(--muted);
+    font-size: 16px;
+    padding-top: 3px;
+  }
+
+  .set-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .set-title {
+    font-family: var(--font-display);
+    font-size: 24px;
+    line-height: 1.25;
+  }
+
+  .company {
+    color: var(--brass);
+  }
+
+  .education {
+    margin: 20px 0 0;
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  .offstage {
+    flex: 1 1 320px;
+    padding: 28px;
+  }
+
+  .offstage-head {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+
+  .offstage h2 {
+    margin: 0 0 6px;
+    font-size: 36px;
+  }
+
+  .offstage ul {
+    margin: 0;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .offstage li::marker {
+    color: var(--brass);
+  }
+
+  @media (max-width: 640px) {
+    .set {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

@@ -1,0 +1,52 @@
+---
+/** Site-wide behaviour: button sounds, the secret word, the dwell clock and the returning band. */
+---
+
+<script>
+  import { resumeIfPreferred, sfx, type Sfx } from '../lib/audio';
+  import { markSeen } from '../lib/acts';
+  import { arrivedAt, saveSession, session, toast, trackDwell } from '../lib/client';
+
+  resumeIfPreferred();
+  arrivedAt();
+
+  // Every button and link makes a small sound when sound is on. Elements can ask for a different one.
+  document.addEventListener('click', (e) => {
+    const el = e.target instanceof Element ? e.target.closest<HTMLElement>('a, button, summary, label') : null;
+    if (!el || el.dataset.sfx === 'none') return;
+    sfx((el.dataset.sfx as Sfx | undefined) ?? 'click');
+  });
+
+  // Act VIII: type "abracadabra" anywhere, or tap the avatar five times.
+  const WORD = 'abracadabra';
+  let typed = '';
+  function revealSecret() {
+    if (document.documentElement.classList.contains('is-magic')) return;
+    document.documentElement.classList.add('is-magic');
+    saveSession('magic', true);
+    markSeen('secret');
+    toast('Act VIII: you found the secret word. The hat suits me, right?', 'reveal');
+  }
+  document.addEventListener('keydown', (e) => {
+    const t = e.target as HTMLElement | null;
+    if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return;
+    if (e.key.length !== 1) return;
+    typed = (typed + e.key.toLowerCase()).slice(-WORD.length);
+    if (typed === WORD) revealSecret();
+  });
+  let taps: number[] = [];
+  document.addEventListener('pointerdown', (e) => {
+    if (!(e.target instanceof Element) || !e.target.closest('[data-avatar]')) return;
+    const now = performance.now();
+    taps = [...taps.filter((t) => now - t < 2500), now];
+    if (taps.length >= 5) {
+      taps = [];
+      revealSecret();
+    }
+  });
+
+  document.addEventListener('astro:page-load', () => {
+    if (session('magic', false)) document.documentElement.classList.add('is-magic');
+    trackDwell();
+  });
+</script>

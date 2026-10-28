@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import SoundToggle from '../components/SoundToggle.astro';
 import { acts, education, person, skills, summary } from '../lib/profile';
 
 const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
@@ -12,8 +13,11 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
   bodyClass="plain"
 >
   <div class="toolbar no-print">
-    <a href="/">Back to the show</a>
-    <button type="button" data-print>Print or save as PDF</button>
+    <a href="/"><span aria-hidden="true">←</span> Back to the show</a>
+    <div class="tools">
+      <SoundToggle tone="light" />
+      <button type="button" data-print>Print or save as PDF</button>
+    </div>
   </div>
 
   <main id="main" class="sheet">
@@ -100,25 +104,28 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
 </Base>
 
 <script>
-  document.querySelector('[data-print]')?.addEventListener('click', () => window.print());
+  // Delegated, so it keeps working after in-site navigation swaps the page.
+  document.addEventListener('click', (e) => {
+    if (e.target instanceof Element && e.target.closest('[data-print]')) window.print();
+  });
 </script>
 
 <style is:global>
   body.plain {
-    background: #f4f1ea;
-    color: #1d1a1b;
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #f3efe6;
+    color: #1d1d1f;
+    font-family: var(--font-body);
     font-size: 16px;
     line-height: 1.5;
     color-scheme: light;
   }
 
   body.plain a {
-    color: #6a1a2c;
+    color: #1f4a50;
   }
 
   body.plain :focus-visible {
-    outline-color: #6a1a2c;
+    outline-color: #1f4a50;
   }
 </style>
 
@@ -140,19 +147,25 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
     min-height: 44px;
   }
 
-  .toolbar button {
+  .tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .toolbar [data-print] {
     min-height: 44px;
-    padding: 8px 16px;
-    border: 2px solid #1d1a1b;
-    background: transparent;
-    font: inherit;
-    font-weight: 600;
+    padding: 8px 18px;
+    border: 1.5px solid #1f3a33;
+    border-radius: 999px;
+    background: #1f3a33;
+    color: #ffffff;
+    font: 700 16px/1.2 var(--font-body);
     cursor: pointer;
   }
 
-  .toolbar button:hover {
-    background: #1d1a1b;
-    color: #f4f1ea;
+  .toolbar [data-print]:hover {
+    background: #10292e;
   }
 
   .sheet {
@@ -160,17 +173,20 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
     margin: 16px auto 64px;
     padding: 48px clamp(20px, 5vw, 56px);
     background: #fff;
-    box-shadow: 0 1px 0 #e3ddd0, 0 0 0 1px #e3ddd0;
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px #e1dbcd;
   }
 
   .sheet-head {
-    border-bottom: 2px solid #1d1a1b;
+    border-bottom: 2px solid #1d1d1f;
     padding-bottom: 16px;
   }
 
   h1 {
     margin: 0;
-    font-size: 32px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 36px;
     letter-spacing: -0.01em;
   }
 
@@ -196,7 +212,7 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
   h2 {
     margin: 0 0 10px;
     font-size: 17px;
-    color: #6a1a2c;
+    color: #1f4a50;
   }
 
   h3 {
@@ -243,7 +259,7 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
   .dates {
     margin: 0;
     font-size: 15px;
-    color: #5b4636;
+    color: #4c5a55;
   }
 
   ul {

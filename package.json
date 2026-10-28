@@ -15,8 +15,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@fontsource-variable/pixelify-sans": "^5.3.0",
-    "@fontsource/jacquard-24": "^5.3.0",
+    "@fontsource-variable/figtree": "^5.3.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
     "astro": "^7.4.2"
   },
   "devDependencies": {
