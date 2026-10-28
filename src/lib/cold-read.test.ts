@@ -12,7 +12,6 @@ import {
 
 const base: Signals = {
   hour: 19,
-  minute: 42,
   weekday: 2,
   timeZone: 'Europe/Amsterdam',
   referrer: '',
@@ -85,8 +84,7 @@ describe('coldRead', () => {
     expect(r.guess).toBe(
       "Let me guess. You're in Amsterdam, or somewhere on Amsterdam time, and it's evening. You came here from LinkedIn, and you're on a Mac with dark mode on.",
     );
-    expect(r.reveal).toContain('Your browser told me all of that');
-    expect(r.tells[0]).toBe('Clock: Europe/Amsterdam, 19:42 on a Tuesday');
+    expect(r.aside).toBe("Don't look so surprised. That was only the warm-up.");
   });
 
   it('notices weekends and falls back when the time zone is not a place', () => {
@@ -94,31 +92,34 @@ describe('coldRead', () => {
     expect(r.guess).toContain("It's mid-morning on a Saturday where you are.");
   });
 
-  it('greets a company from a tailored link and owns up to the trick', () => {
+  it('greets a company from a tailored link', () => {
     const r = coldRead({ ...base, search: '?for=ai&co=trivago', os: 'windows' });
     expect(r.role).toBe('ai');
     expect(r.company).toBe('trivago');
     expect(r.guess).toContain("You're at trivago, and you opened the link I sent with my application.");
     expect(r.guess).toContain("You're on a Windows machine.");
     expect(r.guess).toContain("you're hiring for AI work");
-    expect(r.reveal).toContain('The link I sent you told me half of that');
-    expect(r.tells).toContain('The link carries for=ai and co=trivago');
   });
 
   it('notices a first language other than English', () => {
     const r = coldRead({ ...base, language: 'de-DE' });
-    expect(r.guess).toContain("German is your browser's first language");
+    expect(r.guess).toContain('you usually read in German');
   });
 
   it('welcomes repeat visitors', () => {
     const r = coldRead({ ...base, visits: 3 });
     expect(r.guess).toContain('Welcome back');
-    expect(r.tells).toContain('Visit number 3, counted on your device only');
   });
 
   it('only claims what the signals support', () => {
     const r = coldRead(base);
     expect(r.guess).not.toMatch(/phone|Mac|Windows|LinkedIn|dark mode/);
     expect(r.guess).toContain('my bet is a PDF or an email');
+  });
+
+  it('never gives the method away', () => {
+    for (const r of [coldRead(base), coldRead({ ...base, search: '?co=Acme', language: 'de-DE' }), coldRead({ ...base, referrer: 'https://www.linkedin.com/' })]) {
+      expect(`${r.guess} ${r.aside}`).not.toMatch(/browser|psychic|told me/i);
+    }
   });
 });

@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import NewTabLink from './NewTabLink.astro';
 import carracing from '../assets/arcade/carracing.png';
 import warrior from '../assets/arcade/warriordungeon.png';
 import brick from '../assets/arcade/brickbreaker.png';
@@ -29,11 +30,11 @@ const games = [
       {
         games.map((g) => (
           <li>
-            <a class="game" href={g.href} data-astro-reload>
+            <NewTabLink class="game" href={g.href}>
               <Image src={g.img} alt="" widths={[320, 480]} sizes="(min-width: 900px) 280px, 45vw" loading="lazy" />
               <span class="game-title">{g.title}</span>
               <span class="game-line">{g.line}</span>
-            </a>
+            </NewTabLink>
           </li>
         ))
       }

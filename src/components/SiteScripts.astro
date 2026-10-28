@@ -1,13 +1,12 @@
 ---
-/** Site-wide behaviour: button sounds, the secret word, the dwell clock and the returning band. */
+/** Site-wide behaviour: the band, button sounds, the secret word and the dwell clock. */
 ---
 
 <script>
-  import { resumeIfPreferred, sfx, type Sfx } from '../lib/audio';
+  import { armAutostart, sfx, type Sfx } from '../lib/audio';
   import { markSeen } from '../lib/acts';
   import { arrivedAt, saveSession, session, toast, trackDwell } from '../lib/client';
 
-  resumeIfPreferred();
   arrivedAt();
 
   // Every button and link makes a small sound when sound is on. Elements can ask for a different one.
@@ -46,6 +45,9 @@
   });
 
   document.addEventListener('astro:page-load', () => {
+    // Someone who left the jazz playing last time gets it back from their first click, tap or key press.
+    // The plain résumé is the exception: someone who skipped the show gets quiet.
+    if (!document.body.classList.contains('plain')) armAutostart();
     if (session('magic', false)) document.documentElement.classList.add('is-magic');
     trackDwell();
   });

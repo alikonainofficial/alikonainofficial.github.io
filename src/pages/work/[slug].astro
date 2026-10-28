@@ -7,6 +7,7 @@ import SiteHeader from '../../components/SiteHeader.astro';
 import SiteFooter from '../../components/SiteFooter.astro';
 import Encore from '../../components/Encore.astro';
 import { person } from '../../lib/profile';
+import NewTabLink from '../../components/NewTabLink.astro';
 
 export const getStaticPaths = (async () => {
   const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
@@ -77,9 +78,9 @@ const d = entry.data;
         d.links.length > 0 && (
           <div class="btn-row">
             {d.links.map((l) => (
-              <a class="btn btn--line" href={l.href}>
+              <NewTabLink class="btn btn--line" href={l.href}>
                 {l.label}
-              </a>
+              </NewTabLink>
             ))}
           </div>
         )
@@ -99,7 +100,7 @@ const d = entry.data;
       <h2 id="talk-title" class="display">Seen enough of the trick? Let's talk about the job.</h2>
       <div class="btn-row">
         <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>
-        <a class="btn btn--line" href={person.linkedin}>LinkedIn</a>
+        <NewTabLink class="btn btn--line" href={person.linkedin}>LinkedIn</NewTabLink>
         <a class="btn btn--line" href="/resume/">The plain résumé</a>
       </div>
     </section>

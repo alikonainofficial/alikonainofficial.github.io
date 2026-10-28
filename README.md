@@ -21,7 +21,7 @@ Eight tricks are spread across the site, so no single page does all of them. A p
 
 Each case page performs its own favourite encore first, then rotates to the ones the visitor hasn't seen. `#encore-vanish`, `#encore-number` and `#encore-eleven` on any case page ask for a specific one.
 
-Everything happens in the browser. The cold read uses details any page can see: local time and time zone, `document.referrer`, the platform, the preferred language and the link's query string. Seen acts, the visit counter and the sound preference live in the visitor's own `localStorage`; hover counts and on-screen time live in `sessionStorage` and vanish with the tab. Nothing is sent anywhere.
+The site never explains a trick, on stage or after it. Nothing a visitor does is sent anywhere: there are no cookies, no analytics and no server.
 
 Tailored links make the cold read sharper:
 
@@ -35,7 +35,11 @@ Combine them: `https://alikonainofficial.github.io/?for=ai&co=Acme`.
 
 ## Sound
 
-Sound is off until the visitor presses **Play the jazz**. The music is a small generative lounge-jazz band written with the Web Audio API in `src/lib/audio.ts`: walking bass, brushes, a ride cymbal and electric-piano chords over a ii–V–I, swung at 92 BPM. Buttons get short synthesized sound effects. There are no audio files, and the band keeps playing between pages because the site uses Astro's client router.
+Sound stays off until the visitor presses **Play the jazz**. Until they make a choice, that button glows and a small note points at it ("Press play. The band's been waiting all night."); the note can be dismissed, and the plain résumé shows neither. The choice is remembered: anyone who left the band playing hears it again from their first click, tap or key press on their next visit (browsers don't allow sound before one). The music is a small generative lounge-jazz band written with the Web Audio API in `src/lib/audio.ts`: walking bass, brushes, a ride cymbal and electric-piano chords over a ii–V–I, swung at 92 BPM. Buttons get short synthesized sound effects. There are no audio files, and the band keeps playing between pages because the site uses Astro's client router.
+
+## Links
+
+Links that leave the site (LinkedIn, GitHub, the arcade games, project pages) open in a new tab, and say so to screen readers. Components use `NewTabLink`; links written in the case-file Markdown get the same treatment from a small Sätteri plugin in `src/lib/new-tab.ts`. Links within the site stay in the same tab, so the music and the program carry on.
 
 ## Stack
 
