@@ -1,6 +1,7 @@
 ---
 import Avatar from './Avatar.astro';
 import ColdRead from './ColdRead.astro';
+import HostInvite from './HostInvite.astro';
 import { person } from '../lib/profile';
 import { TAGLINES } from '../lib/cold-read';
 ---
@@ -12,12 +13,15 @@ import { TAGLINES } from '../lib/cold-read';
     <ColdRead />
   </div>
 
-  <div class="spotlight" aria-hidden="true">
-    <div class="glow"></div>
-    <div class="podium"></div>
-    <div class="performer">
-      <Avatar scale={8} label="" />
+  <div class="spotlight">
+    <div class="stage-light" aria-hidden="true">
+      <div class="glow"></div>
+      <div class="podium"></div>
+      <div class="performer">
+        <Avatar scale={8} label="" />
+      </div>
     </div>
+    <HostInvite />
   </div>
 </section>
 
@@ -57,6 +61,10 @@ import { TAGLINES } from '../lib/cold-read';
     flex: 1 1 340px;
     max-width: 400px;
     margin-inline: auto;
+  }
+
+  .stage-light {
+    position: relative;
     aspect-ratio: 1 / 1;
     display: flex;
     align-items: flex-end;
@@ -101,11 +109,17 @@ import { TAGLINES } from '../lib/cold-read';
 
     .spotlight {
       order: -1;
-      flex: 0 0 190px;
+      flex: 1 1 100%;
+      max-width: none;
+    }
+
+    .stage-light {
+      width: 190px;
+      margin-inline: auto;
       padding-bottom: 22px;
     }
 
-    .spotlight :global(svg) {
+    .stage-light :global(svg) {
       width: 84px;
       height: auto;
     }

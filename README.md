@@ -35,7 +35,14 @@ Combine them: `https://alikonainofficial.github.io/?for=ai&co=Acme`.
 
 ## Sound
 
-Sound stays off until the visitor presses **Play the jazz**. Until they make a choice, that button glows and a small note points at it ("Press play. The band's been waiting all night."); the note can be dismissed, and the plain résumé shows neither. The choice is remembered: anyone who left the band playing hears it again from their first click, tap or key press on their next visit (browsers don't allow sound before one). The music is a small generative lounge-jazz band written with the Web Audio API in `src/lib/audio.ts`: walking bass, brushes, a ride cymbal and electric-piano chords over a ii–V–I, swung at 92 BPM. Buttons get short synthesized sound effects. There are no audio files, and the band keeps playing between pages because the site uses Astro's client router.
+Every visit starts in silence, because browsers don't allow sound before the visitor clicks something. Instead of pretending otherwise, the site asks:
+
+- The host asks from a speech bubble beside his face: "You look like a jazz person. Shall I have the band play?", with **Play the jazz** and **Not now**, and a reassurance that it's soft and can be paused. Faces draw the eye, and a polite question gets more yeses than a button in a corner. A yes gets "I knew you'd say yes."
+- The header's **Play the jazz** button carries the universal play symbol and is the only filled pill in the header, breathing a slow brass glow. "Skip the show" is an outline, so the two don't compete.
+- While the band plays, the button shows moving equalizer bars and offers **Pause the jazz**. After a "Not now" or a pause, it settles into a quiet outline for the rest of the visit.
+- With reduced motion, the glow becomes a steady ring and the bars stand still. The plain résumé gets just the button.
+
+The music is a small generative lounge-jazz band written with the Web Audio API in `src/lib/audio.ts`: walking bass, brushes, a ride cymbal and electric-piano chords over a ii–V–I, swung at 92 BPM. Buttons get short synthesized sound effects. There are no audio files, and the band keeps playing between pages because the site uses Astro's client router.
 
 ## Links
 

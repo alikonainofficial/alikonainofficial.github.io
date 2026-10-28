@@ -20,7 +20,7 @@ const links = [
   </nav>
   <div class="btn-row">
     <SoundToggle />
-    <a class="btn btn--light" href="/resume/">Skip the show</a>
+    <a class="btn skip" href="/resume/">Skip the show</a>
   </div>
 </header>
 
@@ -62,6 +62,18 @@ const links = [
   nav a:hover {
     color: var(--text);
     border-bottom-color: var(--brass);
+  }
+
+  /* An outline, so the jazz button is the one filled pill up here and draws the eye first. */
+  .skip {
+    border-color: rgba(232, 239, 233, 0.5);
+    color: var(--text);
+  }
+
+  .skip:hover {
+    border-color: var(--text);
+    background: rgba(232, 239, 233, 0.08);
+    color: var(--text);
   }
 
   @media (max-width: 720px) {

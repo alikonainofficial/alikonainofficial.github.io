@@ -1,27 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { soundChosen, soundPreferred } from './audio';
+import { soundStateFor } from './audio';
 
-const stored = (value: string | null) => ({ getItem: () => value });
-const blocked = { getItem: (): string | null => { throw new Error('blocked'); } };
-
-describe('the sound preference', () => {
-  it('is off until the visitor presses play', () => {
-    expect(soundPreferred(stored(null))).toBe(false);
-    expect(soundPreferred(undefined)).toBe(false);
-    expect(soundPreferred(blocked)).toBe(false);
+describe('the sound button', () => {
+  it('invites a press on every visit until the visitor answers', () => {
+    expect(soundStateFor(false, false)).toBe('invite');
   });
 
-  it('remembers the visitor turning it on, and off again', () => {
-    expect(soundPreferred(stored('on'))).toBe(true);
-    expect(soundPreferred(stored('off'))).toBe(false);
-  });
-});
-
-describe('the invitation to press play', () => {
-  it('shows until the visitor has made a choice either way', () => {
-    expect(soundChosen(stored(null))).toBe(false);
-    expect(soundChosen(blocked)).toBe(false);
-    expect(soundChosen(stored('on'))).toBe(true);
-    expect(soundChosen(stored('off'))).toBe(true);
+  it('shows the band playing, and goes quiet once paused or declined', () => {
+    expect(soundStateFor(true, true)).toBe('playing');
+    expect(soundStateFor(false, true)).toBe('paused');
   });
 });
