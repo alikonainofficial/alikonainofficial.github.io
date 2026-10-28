@@ -3,8 +3,10 @@
  *
  * Nothing is downloaded: the lounge-jazz loop (walking bass, electric-piano
  * comping, brushes and a ride cymbal over a ii-V-I progression) and every click,
- * card flip and chime are generated in the browser. Sound stays off until the
- * visitor turns it on, and that choice is remembered on their device.
+ * card flip and chime are generated in the browser. Sound is on by default.
+ * Browsers only allow audio after the visitor's first click, tap or key press,
+ * so the band starts then. A visitor who switches it off stays switched off,
+ * and that choice is remembered on their device.
  */
 
 export type Sfx = 'click' | 'tick' | 'flip' | 'chime' | 'reveal' | 'whoosh';
@@ -41,7 +43,7 @@ let nextBeatTime = 0;
 let beatIndex = 0;
 let on = false;
 let rng = 1;
-let cancelResume: (() => void) | null = null;
+let armed = false;
 
 function random(): number {
   // Small deterministic generator so the band never plays exactly the same loop twice in a row.
@@ -49,16 +51,30 @@ function random(): number {
   return (rng - 1) / 2147483646;
 }
 
-export function soundPreferred(): boolean {
+/** On unless this visitor has switched it off. */
+export function soundPreferred(storage: Pick<Storage, 'getItem'> | undefined = safeStorage()): boolean {
   try {
-    return localStorage.getItem(PREF) === 'on';
+    return storage?.getItem(PREF) !== 'off';
   } catch {
-    return false;
+    return true;
   }
 }
 
-export function isSoundOn(): boolean {
-  return on;
+function safeStorage(): Storage | undefined {
+  try {
+    return typeof localStorage === 'undefined' ? undefined : localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Playing, or about to start on the visitor's first click: what the sound button should show. */
+export function soundActive(): boolean {
+  return on || armed;
+}
+
+function notify(): void {
+  document.dispatchEvent(new CustomEvent('sound:change', { detail: soundActive() }));
 }
 
 function ensureContext(): AudioContext | null {
@@ -213,33 +229,18 @@ function schedule() {
 
 /* ---------------- public controls ---------------- */
 
-export async function setSound(enabled: boolean): Promise<void> {
-  cancelResume?.();
-  cancelResume = null;
-  on = enabled;
-  try {
-    localStorage.setItem(PREF, enabled ? 'on' : 'off');
-  } catch {
-    /* fine: it just won't be remembered */
-  }
-  document.dispatchEvent(new CustomEvent('sound:change', { detail: enabled }));
-
-  if (!enabled) {
-    if (ctx && musicBus) musicBus.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
-    if (timer !== null) {
-      window.clearInterval(timer);
-      timer = null;
-    }
-    // Once the last note has faded, let the audio hardware rest.
-    window.setTimeout(() => {
-      if (!on && ctx?.state === 'running') void ctx.suspend();
-    }, 2000);
-    return;
-  }
-
+/** Start the band. Inside a click or key press this is audible at once; otherwise it waits for one. */
+function startBand(): void {
   const c = ensureContext();
   if (!c || !musicBus) return;
-  if (c.state === 'suspended') await c.resume();
+  on = true;
+  if (c.state !== 'running') {
+    c.resume()
+      .then(() => disarmAutostart())
+      .catch(() => {
+        /* not allowed yet: the next click or key press tries again */
+      });
+  } else disarmAutostart();
   musicBus.gain.cancelScheduledValues(c.currentTime);
   musicBus.gain.setTargetAtTime(0.32, c.currentTime, 0.6);
   if (timer === null) {
@@ -249,8 +250,34 @@ export async function setSound(enabled: boolean): Promise<void> {
   }
 }
 
+function stopBand(): void {
+  on = false;
+  disarmAutostart();
+  if (ctx && musicBus) musicBus.gain.setTargetAtTime(0, ctx.currentTime, 0.25);
+  if (timer !== null) {
+    window.clearInterval(timer);
+    timer = null;
+  }
+  // Once the last note has faded, let the audio hardware rest.
+  window.setTimeout(() => {
+    if (!on && ctx?.state === 'running') void ctx.suspend();
+  }, 2000);
+}
+
+/** The sound button: remember the choice and act on it straight away. */
+export function setSound(enabled: boolean): void {
+  try {
+    localStorage.setItem(PREF, enabled ? 'on' : 'off');
+  } catch {
+    /* fine: it just won't be remembered */
+  }
+  if (enabled) startBand();
+  else stopBand();
+  notify();
+}
+
 export function sfx(name: Sfx): void {
-  if (!on || !ctx || !fxBus) return;
+  if (!on || !ctx || !fxBus || ctx.state !== 'running') return;
   const t = ctx.currentTime + 0.005;
   const tone = (freq: number, at: number, length: number, gain: number, type: OscillatorType = 'sine', endFreq?: number) => {
     const o = ctx!.createOscillator();
@@ -290,21 +317,33 @@ export function sfx(name: Sfx): void {
   }
 }
 
+const GESTURES = ['pointerdown', 'pointerup', 'touchend', 'keydown'] as const;
+
+function onFirstGesture(e: Event): void {
+  // The sound button handles its own clicks; starting here too would switch it straight back off.
+  if (e.target instanceof Element && e.target.closest('[data-sound-toggle]')) return;
+  if (!soundPreferred()) {
+    disarmAutostart();
+    notify();
+    return;
+  }
+  startBand();
+}
+
 /**
- * Called once per full page load. If the visitor turned sound on last time,
- * the band starts again on their first click or key press (browsers require one).
+ * Sound is on by default, but browsers only allow it after the visitor's first
+ * click, tap or key press. Wait for one, then start the band. Safe to call on
+ * every page: it does nothing when the band is already playing or switched off.
  */
-export function resumeIfPreferred(): void {
-  if (!soundPreferred() || on) return;
-  const start = (e: Event) => {
-    // The sound button handles its own clicks; starting here too would switch it straight back off.
-    if (e.target instanceof Element && e.target.closest('[data-sound-toggle]')) return;
-    void setSound(true);
-  };
-  window.addEventListener('pointerdown', start);
-  window.addEventListener('keydown', start);
-  cancelResume = () => {
-    window.removeEventListener('pointerdown', start);
-    window.removeEventListener('keydown', start);
-  };
+export function armAutostart(): void {
+  if (armed || !soundPreferred() || (on && ctx?.state === 'running')) return;
+  armed = true;
+  for (const g of GESTURES) window.addEventListener(g, onFirstGesture, { capture: true });
+  notify();
+}
+
+function disarmAutostart(): void {
+  if (!armed) return;
+  armed = false;
+  for (const g of GESTURES) window.removeEventListener(g, onFirstGesture, { capture: true });
 }

@@ -1,5 +1,6 @@
 ---
 import { person } from '../lib/profile';
+import NewTabLink from './NewTabLink.astro';
 ---
 
 <footer class="site-footer">
@@ -8,8 +9,8 @@ import { person } from '../lib/profile';
       <a href={`mailto:${person.email}`}>{person.email}</a>, {person.location}.
     </p>
     <p>
-      No cookies and no tracking. Every trick happens in your browser and stays there. The music is played live by your
-      browser too, no recordings. Built with Astro, hosted on GitHub Pages, and the <a href={person.source}>source is on GitHub</a>.
+      No cookies and no tracking. The band plays live, no recordings. Built with Astro, hosted on GitHub Pages, and the
+      <NewTabLink href={person.source}>source is on GitHub</NewTabLink>.
     </p>
   </div>
 </footer>

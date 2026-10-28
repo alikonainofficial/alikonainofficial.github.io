@@ -1,11 +1,11 @@
 /**
  * The cold read.
  *
- * A stage mentalist "reads" a stranger from small, observable details, then
- * admits there was no magic involved. This module does the same with details a
- * browser already shares with every page it opens: the clock's time zone and
- * local time, the page that linked here, the operating system, the language,
- * the colour scheme, and the query string of the link itself.
+ * A stage mentalist "reads" a stranger from small, observable details. This
+ * module does the same with details a browser already shares with every page it
+ * opens: the clock's time zone and local time, the page that linked here, the
+ * operating system, the language, the colour scheme, and the link's query string.
+ * The page never says how it knows: a good mentalist doesn't explain.
  *
  * Everything is pure and runs on the client. Nothing is stored or sent anywhere,
  * apart from a visit counter that stays in the visitor's own localStorage.
@@ -26,8 +26,6 @@ export type Source =
 export interface Signals {
   /** Visitor's local hour, 0–23. */
   hour: number;
-  /** Visitor's local minute, 0–59. */
-  minute: number;
   /** 0 is Sunday, as in Date#getDay. */
   weekday: number;
   /** IANA time zone, e.g. "Europe/Amsterdam". Empty when unknown. */
@@ -53,10 +51,8 @@ export interface Reading {
   tagline: string;
   /** The read itself: a couple of sentences of confident guessing. */
   guess: string;
-  /** The admission that follows every good trick. */
-  reveal: string;
-  /** Plain-language list of the details the read was built from. */
-  tells: string[];
+  /** The line that follows the read. It never explains how. */
+  aside: string;
 }
 
 const SITE_HOST = 'alikonainofficial.github.io';
@@ -208,7 +204,6 @@ export function joinClauses(items: string[]): string {
   return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
 }
 
-const pad = (n: number) => String(n).padStart(2, '0');
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function coldRead(signals: Signals): Reading {
@@ -216,7 +211,6 @@ export function coldRead(signals: Signals): Reading {
   const role = parseRole(params.get('for'));
   const company = cleanCompany(params.get('co'));
   const source = classifyReferrer(signals.referrer);
-  const fromLink = company !== null || params.has('for');
   const city = cityFromTimeZone(signals.timeZone);
   const weekend = signals.weekday === 0 || signals.weekday === 6;
   const day = DAYS[signals.weekday] ?? 'today';
@@ -246,43 +240,17 @@ export function coldRead(signals: Signals): Reading {
   if (role === 'ai') extra = "And you're hiring for AI work, which is most of what I've been building lately.";
   else if (role === 'fde') extra = 'And you need someone who can sit with the people using the software and ship what they actually need.';
   else if (signals.visits > 1) extra = "And you've been here before. Welcome back.";
-  else if (lang && !lang.startsWith('en')) extra = `${languageName(signals.language.split('-')[0] ?? signals.language)} is your browser's first language, so thank you for reading this in English.`;
+  else if (lang && !lang.startsWith('en')) extra = `And you usually read in ${languageName(signals.language.split('-')[0] ?? signals.language)}, so thank you for reading this in English.`;
 
   const guess = `Let me guess. ${sentences.map((s) => `${s}.`).join(' ')}${extra ? ` ${extra}` : ''}`;
 
-  const reveal = fromLink
-    ? "Relax, I'm not psychic. The link I sent you told me half of that, and your browser told me the rest. Want to see a real trick?"
-    : "Relax, I'm not psychic. Your browser told me all of that. Want to see a real trick?";
-
-  const tells = [
-    `Clock: ${signals.timeZone || 'unknown time zone'}, ${pad(signals.hour)}:${pad(signals.minute)} on a ${day}`,
-    source.kind === 'none'
-      ? 'No referring page'
-      : source.kind === 'self'
-        ? 'Came from another page on this site'
-        : `Came from ${referrerHost(signals.referrer)}`,
-    [signals.os ? DEVICE[signals.os].replace(/^an? /, '') : signals.touch ? 'Touch screen' : 'Mouse or trackpad', signals.prefersDark ? 'dark mode' : 'light mode'].join(', '),
-    `Reads ${signals.language ? languageName(signals.language) : 'an unknown language'}`,
-    signals.visits > 1 ? `Visit number ${signals.visits}, counted on your device only` : 'First visit',
-  ];
-  if (fromLink) {
-    const parts = [params.has('for') ? `for=${params.get('for')}` : null, company ? `co=${company}` : null].filter(Boolean);
-    tells.push(`The link carries ${parts.join(' and ')}`);
-  }
-
-  return { role, company, tagline: TAGLINES[role], guess, reveal, tells };
+  return { role, company, tagline: TAGLINES[role], guess, aside: ASIDE };
 }
 
-function referrerHost(referrer: string): string {
-  try {
-    return new URL(referrer).hostname.replace(/^www\./, '');
-  } catch {
-    return 'unknown';
-  }
-}
+const ASIDE = "Don't look so surprised. That was only the warm-up.";
 
 /** What visitors without JavaScript (and search engines) see. */
-export const FALLBACK_READING: Pick<Reading, 'guess' | 'reveal'> = {
+export const FALLBACK_READING: Pick<Reading, 'guess' | 'aside'> = {
   guess: "Let me guess. You're hiring, you're busy, and this isn't the first portfolio you've opened today.",
-  reveal: "Relax, I'm not psychic. That one is true of almost everyone reading this. Turn on JavaScript and I'll do much better.",
+  aside: "Close? Turn on JavaScript and I'll tell you a great deal more.",
 };

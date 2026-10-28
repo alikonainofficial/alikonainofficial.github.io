@@ -16,10 +16,10 @@ const { tone = 'dark' } = Astro.props;
 </button>
 
 <script>
-  import { isSoundOn, setSound } from '../lib/audio';
+  import { setSound, soundActive } from '../lib/audio';
 
   function sync() {
-    const on = isSoundOn();
+    const on = soundActive();
     document.querySelectorAll<HTMLButtonElement>('[data-sound-toggle]').forEach((b) => {
       b.setAttribute('aria-pressed', String(on));
       const label = b.querySelector('[data-sound-label]');
@@ -29,7 +29,7 @@ const { tone = 'dark' } = Astro.props;
 
   document.addEventListener('click', (e) => {
     const button = e.target instanceof Element ? e.target.closest('[data-sound-toggle]') : null;
-    if (button) void setSound(!isSoundOn());
+    if (button) setSound(!soundActive());
   });
   document.addEventListener('sound:change', sync);
   document.addEventListener('astro:page-load', sync);

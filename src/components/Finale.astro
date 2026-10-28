@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import { person } from '../lib/profile';
+import NewTabLink from './NewTabLink.astro';
 
 // How the prediction names each project mid-sentence.
 const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id, w.data.label]));
@@ -23,14 +24,6 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
   <div class="prediction panel" data-prediction hidden tabindex="-1">
     <p class="kicker">My prediction</p>
     <ol class="calls" data-calls></ol>
-    <details class="how">
-      <summary>How did I do it?</summary>
-      <p>
-        I didn't. Nothing was sealed. While you browsed, your browser timed how long each part of the page stayed on your screen
-        and counted your hovers, and I wrote the "prediction" the moment you opened the envelope. Most sealed predictions work a
-        bit like that. The difference is that I'm telling you, and none of it ever left your device.
-      </p>
-    </details>
     <p class="progress" data-progress></p>
   </div>
 
@@ -38,8 +31,8 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
     <p class="display contact-line">For my last trick, I'll predict what you do next: you'll get in touch.</p>
     <div class="btn-row">
       <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>
-      <a class="btn btn--line" href={person.linkedin}>LinkedIn</a>
-      <a class="btn btn--line" href={person.github}>GitHub</a>
+      <NewTabLink class="btn btn--line" href={person.linkedin}>LinkedIn</NewTabLink>
+      <NewTabLink class="btn btn--line" href={person.github}>GitHub</NewTabLink>
       <a class="btn btn--line" href="/resume/">The plain résumé</a>
     </div>
   </div>
@@ -259,20 +252,7 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
     font-style: normal;
   }
 
-  .how summary {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--brass);
-    font-weight: 700;
-    cursor: pointer;
-  }
 
-  .how p {
-    margin: 4px 0 0;
-    max-width: 70ch;
-    color: var(--muted);
-  }
 
   .progress {
     margin: 0;

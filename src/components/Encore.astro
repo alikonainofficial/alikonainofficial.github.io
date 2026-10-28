@@ -46,14 +46,6 @@ const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
       <button class="btn btn--line" type="button" data-vanish-reset hidden>Put the cards back</button>
     </div>
     <div class="result" data-result aria-live="polite"></div>
-    <details class="how" data-how hidden>
-      <summary>How did I do it?</summary>
-      <p>
-        Look again. None of the five cards that came back was in the first six. I swapped every card, but you were only holding on
-        to yours, so it's the only one you missed. People see what they're watching for, which is why I don't trust a code review
-        that comes without tests.
-      </p>
-    </details>
   </div>
 
   <!-- Act V: think of a number -->
@@ -71,13 +63,6 @@ const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
         <button class="btn btn--line" type="button" data-step-again hidden>Start again</button>
       </div>
     </div>
-    <details class="how" data-how hidden>
-      <summary>How did I do it?</summary>
-      <p>
-        Whatever you start with, the steps cancel it out: (2n + 10) ÷ 2 − n is always 5, so your number never mattered. Good data
-        pipelines work the same way. Normalise early, and what comes out stops depending on how messy the input was.
-      </p>
-    </details>
   </div>
 
   <!-- Act VI: the 1089 -->
@@ -112,14 +97,6 @@ const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
       </div>
       <p class="check-out" data-check-out aria-live="polite"></p>
     </div>
-    <details class="how" data-how hidden>
-      <summary>How did I do it?</summary>
-      <p>
-        After the subtraction, the middle digit is always 9 and the outer two always add up to 9. That leaves only eight possible
-        answers, and every one of them plus its reverse is 1089. The rule about the first and last digits is there for the edge
-        cases, which is where engineers earn their keep.
-      </p>
-    </details>
   </div>
 </section>
 
@@ -178,7 +155,6 @@ const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
     go.hidden = true;
     go.disabled = false;
     reset.hidden = false;
-    act.querySelector<HTMLElement>('[data-how]')!.hidden = false;
     markSeen('vanish');
   }
 
@@ -223,7 +199,6 @@ const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
     next.hidden = true;
     again.hidden = false;
     again.focus();
-    act.querySelector<HTMLElement>('[data-how]')!.hidden = false;
     sfx('reveal');
     markSeen('number');
   }
@@ -235,7 +210,6 @@ const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
     act.querySelector<HTMLElement>('[data-sealed-sr]')!.textContent = 'The card says 1089.';
     act.querySelector<HTMLButtonElement>('[data-turn]')!.hidden = true;
     act.querySelector<HTMLElement>('[data-check]')!.hidden = false;
-    act.querySelector<HTMLElement>('[data-how]')!.hidden = false;
     sfx('flip');
     setTimeout(() => sfx('reveal'), reduced() ? 0 : 450);
     markSeen('eleven');
@@ -611,20 +585,5 @@ const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
 
   .check-out:empty {
     display: none;
-  }
-
-  .how summary {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    color: var(--brass);
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .how p {
-    margin: 4px 0 0;
-    max-width: 68ch;
-    color: var(--muted);
   }
 </style>

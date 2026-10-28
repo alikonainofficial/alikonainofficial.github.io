@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import SoundToggle from '../components/SoundToggle.astro';
+import NewTabLink from '../components/NewTabLink.astro';
 import { acts, education, person, skills, summary } from '../lib/profile';
 
 const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
@@ -26,9 +27,9 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
       <p class="role">{person.title}, {person.location}</p>
       <ul class="contact">
         <li><a href={`mailto:${person.email}`}>{person.email}</a></li>
-        <li><a href={person.linkedin}>linkedin.com/in/ali-konain</a></li>
-        <li><a href={person.github}>github.com/alikonainofficial</a></li>
-        <li><a href="https://alikonainofficial.github.io/">alikonainofficial.github.io</a></li>
+        <li><NewTabLink href={person.linkedin}>linkedin.com/in/ali-konain</NewTabLink></li>
+        <li><NewTabLink href={person.github}>github.com/alikonainofficial</NewTabLink></li>
+        <li><NewTabLink href="https://alikonainofficial.github.io/">alikonainofficial.github.io</NewTabLink></li>
       </ul>
     </header>
 
