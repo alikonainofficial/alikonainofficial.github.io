@@ -1,0 +1,94 @@
+---
+interface Props {
+  tone?: 'dark' | 'light';
+}
+const { tone = 'dark' } = Astro.props;
+---
+
+<button class:list={['sound-toggle', `sound-toggle--${tone}`]} type="button" aria-pressed="false" data-sound-toggle data-sfx="none">
+  <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+    <path d="M8 15V4l9-2v11"></path>
+    <circle cx="5.5" cy="15" r="2.5"></circle>
+    <circle cx="14.5" cy="13" r="2.5"></circle>
+  </svg>
+  <span class="sl-full" data-sound-label>Play the jazz</span>
+  <span class="sl-short" aria-hidden="true">Jazz</span>
+</button>
+
+<script>
+  import { isSoundOn, setSound } from '../lib/audio';
+
+  function sync() {
+    const on = isSoundOn();
+    document.querySelectorAll<HTMLButtonElement>('[data-sound-toggle]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(on));
+      const label = b.querySelector('[data-sound-label]');
+      if (label) label.textContent = on ? 'Stop the jazz' : 'Play the jazz';
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    const button = e.target instanceof Element ? e.target.closest('[data-sound-toggle]') : null;
+    if (button) void setSound(!isSoundOn());
+  });
+  document.addEventListener('sound:change', sync);
+  document.addEventListener('astro:page-load', sync);
+</script>
+
+<style>
+  .sound-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 8px 18px;
+    border-radius: 999px;
+    border: 1.5px solid var(--brass);
+    background: transparent;
+    color: var(--brass);
+    font: 700 16px/1.2 var(--font-body);
+    cursor: pointer;
+  }
+
+  .sound-toggle[aria-pressed='true'] {
+    background: var(--brass);
+    color: var(--bg);
+  }
+
+  .sl-short {
+    display: none;
+  }
+
+  /* Phones get a shorter label; screen readers still hear the full one. */
+  @media (max-width: 720px) {
+    .sound-toggle {
+      gap: 8px;
+      padding: 6px 12px;
+      font-size: 15px;
+    }
+
+    .sl-full {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .sl-short {
+      display: inline;
+    }
+  }
+
+  .sound-toggle--light {
+    border-color: #1f3a33;
+    color: #1f3a33;
+  }
+
+  .sound-toggle--light[aria-pressed='true'] {
+    background: #1f3a33;
+    color: #ffffff;
+  }
+</style>

@@ -1,0 +1,304 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import SiteHeader from '../../components/SiteHeader.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
+import Encore from '../../components/Encore.astro';
+import { person } from '../../lib/profile';
+
+export const getStaticPaths = (async () => {
+  const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
+  return work.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: { entry, next: work[(i + 1) % work.length]! },
+  }));
+}) satisfies GetStaticPaths;
+
+const { entry, next } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+---
+
+<Base title={d.title} description={d.summary}>
+  <SiteHeader />
+  <main id="main" class="case wrap" data-case={entry.id} data-dwell={`the case file for ${d.label}`}>
+    <a class="back" href="/#work"><span aria-hidden="true">←</span> All the work</a>
+
+    <header class="case-head">
+      <p class="case-meta">{d.company}, {d.period.toLowerCase()}</p>
+      <h1 class="display">{d.title}</h1>
+      <p class="case-role">{d.role}.</p>
+    </header>
+
+    <dl class="dossier panel" aria-label="Case file summary">
+      <div>
+        <dt>Objective</dt>
+        <dd>{d.objective}</dd>
+      </div>
+      <div>
+        <dt>Deployed</dt>
+        <dd>{d.deployed}</dd>
+      </div>
+      <div>
+        <dt>Outcome</dt>
+        <dd>{d.outcome}</dd>
+      </div>
+    </dl>
+
+    <figure class="shot">
+      <Image src={d.cover} alt={d.coverAlt} widths={[640, 960, 1280]} sizes="(min-width: 960px) 900px, 92vw" />
+    </figure>
+
+    <article class="prose">
+      <Content />
+    </article>
+
+    {
+      d.gallery.length > 0 && (
+        <section class="gallery" aria-label="More screenshots">
+          {d.gallery.map((g) => (
+            <figure class="shot">
+              <Image src={g.src} alt={g.alt} widths={[640, 960]} sizes="(min-width: 960px) 900px, 92vw" loading="lazy" />
+              {g.caption && <figcaption>{g.caption}</figcaption>}
+            </figure>
+          ))}
+        </section>
+      )
+    }
+
+    <section class="kit" aria-labelledby="kit-title">
+      <h2 id="kit-title" class="display">The kit</h2>
+      <ul class="chips">
+        {d.stack.map((s) => <li>{s}</li>)}
+      </ul>
+      {
+        d.links.length > 0 && (
+          <div class="btn-row">
+            {d.links.map((l) => (
+              <a class="btn btn--line" href={l.href}>
+                {l.label}
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <Encore favourite={d.encore} />
+
+    <nav class="next" aria-label="Next case file">
+      <a href={`/work/${next.id}/`}>
+        <span class="next-label">Next case file</span>
+        <span class="display next-title">{next.data.title} <span aria-hidden="true">→</span></span>
+      </a>
+    </nav>
+
+    <section class="talk panel" aria-labelledby="talk-title">
+      <h2 id="talk-title" class="display">Seen enough of the trick? Let's talk about the job.</h2>
+      <div class="btn-row">
+        <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>
+        <a class="btn btn--line" href={person.linkedin}>LinkedIn</a>
+        <a class="btn btn--line" href="/resume/">The plain résumé</a>
+      </div>
+    </section>
+  </main>
+  <SiteFooter />
+</Base>
+
+<script>
+  import { markSeen } from '../../lib/acts';
+  import { saveSession, session, toast } from '../../lib/client';
+  import { duration, times } from '../../lib/tricks';
+
+  // Act II, the payoff: say what happened before they picked this card on the home page.
+  document.addEventListener('astro:page-load', () => {
+    const page = document.querySelector<HTMLElement>('[data-case]');
+    const picked = session<{ id: string; hovers: number; looked: number } | null>('picked', null);
+    if (!page || !picked || picked.id !== page.dataset.case) return;
+    saveSession('picked', null);
+    let line: string;
+    if (picked.hovers >= 2) line = `You hovered over this card ${times(picked.hovers)} before you picked it. I had a feeling you would.`;
+    else if (picked.looked >= 3000) line = `You looked at this card for ${duration(picked.looked)} before you picked it. I had a feeling you would.`;
+    else line = 'Straight to this one, no hesitation. I had a feeling.';
+    setTimeout(() => {
+      toast(line, 'reveal');
+      markSeen('hover-tell');
+    }, 900);
+  });
+</script>
+
+<style>
+  .case {
+    max-width: 980px;
+    padding-block: 24px 88px;
+  }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .back:hover {
+    color: var(--text);
+  }
+
+  .case-head {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 24px 0 36px;
+  }
+
+  .case-meta,
+  .case-role {
+    margin: 0;
+    color: var(--muted);
+    font-size: 19px;
+  }
+
+  .case-head h1 {
+    margin: 0;
+    font-size: clamp(52px, 8vw, 96px);
+  }
+
+  .dossier {
+    margin: 0;
+    padding: clamp(22px, 3vw, 32px);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+    gap: 20px 32px;
+  }
+
+  .dossier dt {
+    margin-bottom: 6px;
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1.1;
+    color: var(--brass);
+  }
+
+  .dossier dd {
+    margin: 0;
+    font-size: 17px;
+  }
+
+  .shot {
+    margin: 40px 0 0;
+  }
+
+  .shot :global(img) {
+    width: 100%;
+    height: auto;
+    border-radius: 14px;
+    box-shadow: 0 18px 40px rgba(4, 16, 19, 0.45);
+  }
+
+  .shot figcaption {
+    margin-top: 12px;
+    font-size: 16px;
+    color: var(--muted);
+  }
+
+  .prose {
+    max-width: 68ch;
+    margin-top: 56px;
+  }
+
+  .prose :global(h2) {
+    margin: 48px 0 12px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 36px;
+    line-height: 1.1;
+  }
+
+  .prose :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .prose :global(p),
+  .prose :global(li) {
+    line-height: 1.7;
+  }
+
+  .prose :global(ul) {
+    padding-left: 22px;
+  }
+
+  .prose :global(li + li) {
+    margin-top: 8px;
+  }
+
+  .prose :global(li::marker) {
+    color: var(--brass);
+  }
+
+  .prose :global(strong) {
+    color: var(--brass-hi);
+    font-weight: 600;
+  }
+
+  .gallery {
+    margin-top: 16px;
+  }
+
+  .kit {
+    margin-top: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .kit h2 {
+    margin: 0;
+    font-size: 36px;
+  }
+
+  .next {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+
+  .next a {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    text-decoration: none;
+  }
+
+  .next-label {
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  .next-title {
+    font-size: clamp(34px, 5vw, 52px);
+    color: var(--text);
+  }
+
+  .next a:hover .next-title {
+    color: var(--brass);
+  }
+
+  .talk {
+    margin-top: 56px;
+    padding: clamp(24px, 4vw, 36px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .talk h2 {
+    margin: 0;
+    max-width: 22ch;
+    font-size: clamp(30px, 3.6vw, 40px);
+    line-height: 1.15;
+  }
+</style>

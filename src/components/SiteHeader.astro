@@ -1,0 +1,100 @@
+---
+import { person } from '../lib/profile';
+import SoundToggle from './SoundToggle.astro';
+
+const links = [
+  { href: '/#work', label: 'Work' },
+  { href: '/#engineer', label: 'A trick' },
+  { href: '/#story', label: 'Story' },
+  { href: '/#arcade', label: 'Arcade' },
+  { href: '/#finale', label: 'Contact' },
+];
+---
+
+<header class="site-header wrap">
+  <a class="wordmark display" href="/" aria-label={`${person.name}, home`}>{person.name}</a>
+  <nav aria-label="Sections">
+    <ul>
+      {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+    </ul>
+  </nav>
+  <div class="btn-row">
+    <SoundToggle />
+    <a class="btn btn--light" href="/resume/">Skip the show</a>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px 32px;
+    padding-block: 20px;
+  }
+
+  .wordmark {
+    font-size: 26px;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 26px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  nav a {
+    display: inline-block;
+    padding-block: 8px;
+    color: var(--text);
+    font-weight: 500;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+  }
+
+  nav a:hover {
+    color: var(--text);
+    border-bottom-color: var(--brass);
+  }
+
+  @media (max-width: 720px) {
+    .site-header {
+      gap: 4px 12px;
+      padding-block: 12px 4px;
+    }
+
+    .wordmark {
+      font-size: 22px;
+    }
+
+    nav {
+      order: 3;
+      width: 100%;
+    }
+
+    nav ul {
+      gap: 0 18px;
+    }
+
+    nav a {
+      font-size: 16px;
+    }
+
+    .site-header .btn-row {
+      gap: 8px;
+    }
+
+    .site-header .btn {
+      min-height: 44px;
+      padding: 6px 14px;
+      font-size: 15px;
+    }
+  }
+</style>

@@ -1,0 +1,56 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import Avatar from '../components/Avatar.astro';
+---
+
+<Base title="Page not found" noindex>
+  <SiteHeader />
+  <main id="main" class="lost wrap">
+    <div class="spot" aria-hidden="true">
+      <Avatar scale={6} label="" />
+    </div>
+    <h1 class="display">This page vanished.</h1>
+    <p>Good trick, but it wasn't mine. The address may be old, or there's a typo in it.</p>
+    <div class="btn-row">
+      <a class="btn btn--brass" href="/">Back to the show</a>
+      <a class="btn btn--line" href="/resume/">See the résumé</a>
+    </div>
+  </main>
+  <SiteFooter />
+</Base>
+
+<style>
+  .lost {
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+    padding-block: 48px 72px;
+  }
+
+  .spot {
+    padding: 40px 60px 24px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 45%, rgba(217, 179, 108, 0.32), rgba(217, 179, 108, 0) 70%);
+  }
+
+  h1 {
+    margin: 12px 0 0;
+    font-size: clamp(52px, 8vw, 92px);
+  }
+
+  p {
+    margin: 0;
+    max-width: 44ch;
+    color: var(--muted);
+  }
+
+  .btn-row {
+    justify-content: center;
+  }
+</style>

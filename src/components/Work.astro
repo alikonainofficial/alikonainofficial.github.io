@@ -1,0 +1,205 @@
+---
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+
+const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
+---
+
+<section id="work" class="work wrap" aria-labelledby="work-title">
+  <div class="section-head">
+    <h2 id="work-title" class="display">The work</h2>
+    <p>Four case files. Take your time choosing. I'll be watching which one you keep coming back to.</p>
+  </div>
+
+  <ul class="cards">
+    {
+      work.map((entry) => (
+        <li class="card panel" data-card={entry.id} data-dwell={entry.data.label}>
+          <Image
+            src={entry.data.cover}
+            alt={entry.data.coverAlt}
+            widths={[480, 760, 1100]}
+            sizes="(min-width: 1240px) 590px, (min-width: 900px) 46vw, 92vw"
+            class="cover"
+            loading="lazy"
+          />
+          <div class="card-body">
+            <p class="meta">
+              {entry.data.company}, {entry.data.period.toLowerCase()}
+            </p>
+            <h3 class="display">{entry.data.title}</h3>
+            <p class="summary">{entry.data.summary}</p>
+            <p class="tell" data-tell aria-live="polite"></p>
+            <a class="card-link" href={`/work/${entry.id}/`} data-card-link={entry.id}>
+              Read the case file<span class="visually-hidden">: {entry.data.title}</span>
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </li>
+      ))
+    }
+  </ul>
+</section>
+
+<script>
+  import { markSeen } from '../lib/acts';
+  import { sfx } from '../lib/audio';
+  import { bankDwell, saveSession, session } from '../lib/client';
+
+  type Hovers = Record<string, number>;
+
+  const TELLS: Record<number, string> = {
+    2: 'You keep coming back to this one.',
+    4: "Four times now. Go on, it's the one you want.",
+  };
+
+  // Act II: count how often a mouse returns to each card, and say so on the second visit.
+  document.addEventListener(
+    'pointerenter',
+    (e) => {
+      if (!(e.target instanceof HTMLElement) || !e.target.matches('[data-card]') || (e as PointerEvent).pointerType !== 'mouse') return;
+      const id = e.target.dataset.card!;
+      const hovers = session<Hovers>('hovers', {});
+      hovers[id] = (hovers[id] ?? 0) + 1;
+      saveSession('hovers', hovers);
+      const line = TELLS[hovers[id]];
+      const tell = e.target.querySelector<HTMLElement>('[data-tell]');
+      if (line && tell) {
+        tell.textContent = line;
+        tell.classList.add('is-on');
+        sfx('whoosh');
+        markSeen('hover-tell');
+      }
+    },
+    true,
+  );
+
+  // Whatever the device, remember what happened before the pick, for the case page to reveal.
+  document.addEventListener('click', (e) => {
+    const link = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-card-link]') : null;
+    if (!link) return;
+    const id = link.dataset.cardLink!;
+    const label = link.closest<HTMLElement>('[data-dwell]')?.dataset.dwell ?? '';
+    const looked = bankDwell()[label] ?? 0;
+    saveSession('picked', { id, hovers: session<Hovers>('hovers', {})[id] ?? 0, looked });
+  });
+</script>
+
+<style>
+  .work {
+    padding-block: 72px 88px;
+  }
+
+  .cards {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr));
+    gap: 22px;
+  }
+
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition:
+      transform 220ms ease,
+      box-shadow 220ms ease;
+  }
+
+  .card:hover,
+  .card:focus-within {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 44px rgba(4, 16, 19, 0.45);
+  }
+
+  .card :global(.cover) {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: top left;
+    background: var(--bg-deep);
+  }
+
+  .card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 24px 28px 26px;
+  }
+
+  .meta {
+    margin: 0;
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 32px;
+    line-height: 1.1;
+  }
+
+  .summary {
+    margin: 0;
+  }
+
+  .tell {
+    margin: 0;
+    min-height: 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    color: var(--rose);
+  }
+
+  .tell:empty {
+    display: none;
+  }
+
+  .tell.is-on {
+    animation: tell-in 400ms ease-out;
+  }
+
+  @keyframes tell-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+
+  .card-link {
+    margin-top: auto;
+    padding-top: 6px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    min-height: 44px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  /* The whole card opens the case file. */
+  .card-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  .card-link:focus-visible {
+    outline: none;
+  }
+
+  .card:has(.card-link:focus-visible) {
+    outline: 3px solid var(--brass);
+    outline-offset: 3px;
+  }
+
+  .card-link:hover {
+    text-decoration: underline;
+  }
+</style>

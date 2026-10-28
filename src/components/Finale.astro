@@ -1,0 +1,300 @@
+---
+import { getCollection } from 'astro:content';
+import { person } from '../lib/profile';
+
+// How the prediction names each project mid-sentence.
+const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id, w.data.label]));
+---
+
+<section id="finale" class="finale wrap" aria-labelledby="finale-title" data-finale data-labels={JSON.stringify(labels)}>
+  <div class="envelope-row">
+    <button class="envelope" type="button" data-open aria-describedby="sealed-at" data-sfx="none">
+      <span class="flap" aria-hidden="true"></span>
+      <span class="seal" aria-hidden="true"></span>
+      <span class="visually-hidden">Open the sealed prediction</span>
+    </button>
+    <div class="sealed-copy">
+      <h2 id="finale-title" class="display">The sealed prediction</h2>
+      <p id="sealed-at" data-sealed-at>I sealed a prediction about your visit the moment you arrived. Open the envelope when you're ready.</p>
+      <button class="btn btn--line" type="button" data-open data-sfx="none">Open the envelope</button>
+    </div>
+  </div>
+
+  <div class="prediction panel" data-prediction hidden tabindex="-1">
+    <p class="kicker">My prediction</p>
+    <ol class="calls" data-calls></ol>
+    <details class="how">
+      <summary>How did I do it?</summary>
+      <p>
+        I didn't. Nothing was sealed. While you browsed, your browser timed how long each part of the page stayed on your screen
+        and counted your hovers, and I wrote the "prediction" the moment you opened the envelope. Most sealed predictions work a
+        bit like that. The difference is that I'm telling you, and none of it ever left your device.
+      </p>
+    </details>
+    <p class="progress" data-progress></p>
+  </div>
+
+  <div class="contact">
+    <p class="display contact-line">For my last trick, I'll predict what you do next: you'll get in touch.</p>
+    <div class="btn-row">
+      <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>
+      <a class="btn btn--line" href={person.linkedin}>LinkedIn</a>
+      <a class="btn btn--line" href={person.github}>GitHub</a>
+      <a class="btn btn--line" href="/resume/">The plain résumé</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { ACTS, markSeen, readSeen } from '../lib/acts';
+  import { sfx } from '../lib/audio';
+  import { arrivedAt, bankDwell, session } from '../lib/client';
+  import { duration, strongest, times } from '../lib/tricks';
+
+  const clock = (ms: number) => new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+  document.addEventListener('astro:page-load', () => {
+    const sealed = document.querySelector<HTMLElement>('[data-sealed-at]');
+    if (sealed) sealed.textContent = `I sealed a prediction about your visit at ${clock(arrivedAt())}, the moment you arrived. Open the envelope when you're ready.`;
+  });
+
+  document.addEventListener('click', (e) => {
+    const opener = e.target instanceof Element ? e.target.closest('[data-open]') : null;
+    const root = opener?.closest<HTMLElement>('[data-finale]');
+    if (!root) return;
+
+    const calls: string[] = [];
+    const dwell = strongest(bankDwell());
+    if (dwell && dwell.value >= 3000) calls.push(`You'd spend the longest on ${dwell.key}: ${duration(dwell.value)}, give or take.`);
+
+    const hover = strongest(session<Record<string, number>>('hovers', {}));
+    const titles = JSON.parse(root.dataset.labels ?? '{}') as Record<string, string>;
+    if (hover && hover.value >= 2) calls.push(`Your mouse would go back to ${titles[hover.key] ?? 'one card'} more than any other, ${times(hover.value)} in all.`);
+
+    const seen = readSeen();
+    if (seen.has('engineer')) calls.push("You'd let me guess your number, and I'd get it right.");
+    else calls.push("You'd scroll right past the engineer's trick. It's still waiting for you, a little way up.");
+
+    calls.push(`And you'd open this envelope ${duration(Date.now() - arrivedAt())} after you arrived.`);
+
+    const list = root.querySelector<HTMLOListElement>('[data-calls]')!;
+    list.replaceChildren(
+      ...calls.map((c) => {
+        const li = document.createElement('li');
+        li.textContent = c;
+        return li;
+      }),
+    );
+
+    markSeen('prediction');
+    const total = readSeen().size;
+    root.querySelector<HTMLElement>('[data-progress]')!.textContent =
+      total >= ACTS.length
+        ? `That's all ${ACTS.length} acts. You saw the whole show, which is more than most interviewers manage. Thank you for staying.`
+        : `You've seen ${total} of ${ACTS.length} acts tonight. The program in the corner lists the ones you missed.`;
+
+    root.classList.add('is-open');
+    const prediction = root.querySelector<HTMLElement>('[data-prediction]')!;
+    prediction.hidden = false;
+    prediction.focus({ preventScroll: true });
+    prediction.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest' });
+    root.querySelectorAll<HTMLButtonElement>('[data-open]').forEach((b) => {
+      if (b.classList.contains('btn')) b.textContent = 'Open it again';
+    });
+    sfx('reveal');
+  });
+</script>
+
+<style>
+  .finale {
+    padding-block: 88px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .envelope-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px 36px;
+  }
+
+  .envelope {
+    position: relative;
+    flex: 0 0 auto;
+    width: 168px;
+    height: 112px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: var(--card);
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+    transition: transform 200ms ease;
+    animation: wiggle 5s ease-in-out 2s infinite;
+  }
+
+  .envelope:hover {
+    transform: rotate(-3deg) translateY(-3px);
+  }
+
+  .flap {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(160deg, transparent 49%, #d8d1c2 50%, transparent 51.5%),
+      linear-gradient(20deg, transparent 49%, #d8d1c2 50%, transparent 51.5%);
+  }
+
+  .seal {
+    position: absolute;
+    left: 50%;
+    top: 44%;
+    width: 30px;
+    height: 30px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--card-red);
+    box-shadow: inset 0 0 0 4px #c55a50;
+    transition:
+      transform 400ms ease,
+      opacity 400ms ease;
+  }
+
+  .is-open .seal {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.6);
+  }
+
+  .is-open .envelope {
+    animation: none;
+  }
+
+  @keyframes wiggle {
+    0%,
+    88%,
+    100% {
+      transform: none;
+    }
+    92% {
+      transform: rotate(-4deg);
+    }
+    96% {
+      transform: rotate(4deg);
+    }
+  }
+
+  .sealed-copy {
+    flex: 1 1 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .sealed-copy h2 {
+    margin: 0;
+    font-size: clamp(40px, 5vw, 60px);
+  }
+
+  .sealed-copy p {
+    margin: 0;
+    max-width: 52ch;
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.45;
+  }
+
+  .prediction {
+    padding: 28px clamp(20px, 3vw, 32px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .prediction[hidden] {
+    display: none;
+  }
+
+  .prediction:focus {
+    outline: none;
+  }
+
+  .prediction:not([hidden]) {
+    animation: unfold 500ms ease-out;
+  }
+
+  @keyframes unfold {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  .kicker {
+    margin: 0;
+    color: var(--brass);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+
+  .calls {
+    margin: 0;
+    padding-left: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(19px, 2vw, 22px);
+    line-height: 1.45;
+  }
+
+  .calls li::marker {
+    color: var(--brass);
+    font-style: normal;
+  }
+
+  .how summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--brass);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .how p {
+    margin: 4px 0 0;
+    max-width: 70ch;
+    color: var(--muted);
+  }
+
+  .progress {
+    margin: 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+  }
+
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px 40px;
+    padding-top: 40px;
+    border-top: 1px solid var(--line);
+  }
+
+  .contact-line {
+    margin: 0;
+    max-width: 24ch;
+    font-size: clamp(30px, 3.4vw, 42px);
+    line-height: 1.15;
+  }
+</style>

@@ -1,0 +1,630 @@
+---
+import type { EncoreId } from '../lib/acts';
+import { ACTS } from '../lib/acts';
+import { VANISH_BEFORE, cardName, isRed } from '../lib/tricks';
+
+interface Props {
+  favourite: EncoreId;
+}
+
+const { favourite } = Astro.props;
+const numeral = (id: EncoreId) => ACTS.find((a) => a.id === id)?.numeral ?? '';
+---
+
+<section class="encore" aria-labelledby="encore-title" data-encore-root data-favourite={favourite} data-dwell="the encore">
+  <div class="encore-head">
+    <h2 id="encore-title" class="display">Encore</h2>
+    <button class="btn btn--line" type="button" data-encore-next>Show me a different encore</button>
+  </div>
+
+  <!-- Act IV: the vanishing card -->
+  <div class="act" id="encore-vanish" data-encore="vanish" hidden={favourite !== 'vanish'}>
+    <div class="act-head">
+      <p class="kicker">Act {numeral('vanish')}</p>
+      <h3 class="display">Pick a card. Just remember it.</h3>
+      <p>Don't click it and don't tell me. Hold it in your head, then press the button. I'll take your card away.</p>
+    </div>
+    <ul class="court" data-court aria-label="Six playing cards">
+      {
+        VANISH_BEFORE.map((c) => (
+          <li class:list={['pcard', { 'is-red': isRed(c) }]}>
+            <span class="visually-hidden" data-card-name>{cardName(c)}</span>
+            <span class="pcard-inner" aria-hidden="true">
+              <span class="pcard-face">
+                <span class="corner" data-corner>{`${c.rank}${c.suit}`}</span>
+                <span class="pip" data-pip>{c.suit}</span>
+                <span class="corner corner--b" data-corner>{`${c.rank}${c.suit}`}</span>
+              </span>
+              <span class="pcard-back"></span>
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+    <div class="btn-row">
+      <button class="btn btn--brass" type="button" data-vanish-go data-sfx="none">Read my mind</button>
+      <button class="btn btn--line" type="button" data-vanish-reset hidden>Put the cards back</button>
+    </div>
+    <div class="result" data-result aria-live="polite"></div>
+    <details class="how" data-how hidden>
+      <summary>How did I do it?</summary>
+      <p>
+        Look again. None of the five cards that came back was in the first six. I swapped every card, but you were only holding on
+        to yours, so it's the only one you missed. People see what they're watching for, which is why I don't trust a code review
+        that comes without tests.
+      </p>
+    </details>
+  </div>
+
+  <!-- Act V: think of a number -->
+  <div class="act" id="encore-number" data-encore="number" hidden={favourite !== 'number'}>
+    <div class="act-head">
+      <p class="kicker">Act {numeral('number')}</p>
+      <h3 class="display">Think of a number from 1 to 10.</h3>
+      <p>Do the maths in your head. I'll wait, and then I'll tell you where you ended up.</p>
+    </div>
+    <div class="stepper panel" data-stepper>
+      <p class="step-count" data-step-count>Step 1 of 5</p>
+      <p class="step-text display" data-step-text aria-live="polite">Got your number? Good. Double it.</p>
+      <div class="btn-row">
+        <button class="btn btn--brass" type="button" data-step-next>Done</button>
+        <button class="btn btn--line" type="button" data-step-again hidden>Start again</button>
+      </div>
+    </div>
+    <details class="how" data-how hidden>
+      <summary>How did I do it?</summary>
+      <p>
+        Whatever you start with, the steps cancel it out: (2n + 10) ÷ 2 − n is always 5, so your number never mattered. Good data
+        pipelines work the same way. Normalise early, and what comes out stops depending on how messy the input was.
+      </p>
+    </details>
+  </div>
+
+  <!-- Act VI: the 1089 -->
+  <div class="act" id="encore-eleven" data-encore="eleven" hidden={favourite !== 'eleven'}>
+    <div class="act-head">
+      <p class="kicker">Act {numeral('eleven')}</p>
+      <h3 class="display">Take any three-digit number.</h3>
+      <p>You'll want a pen, or a calculator. I've already written your answer on the card.</p>
+    </div>
+    <div class="eleven">
+      <ol class="eleven-steps">
+        <li>Pick a three-digit number whose first and last digits differ by at least 2, like 742.</li>
+        <li>Reverse it, then take the smaller number away from the bigger one.</li>
+        <li>Reverse your answer, and add those two numbers together.</li>
+      </ol>
+      <div class="sealed" data-sealed>
+        <div class="sealed-inner" aria-hidden="true">
+          <span class="sealed-back">My prediction</span>
+          <span class="sealed-face display">1089</span>
+        </div>
+        <p class="visually-hidden" data-sealed-sr aria-live="polite"></p>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn--brass" type="button" data-turn data-sfx="none">Turn over my card</button>
+    </div>
+    <div class="check" role="group" aria-labelledby="eleven-label" data-check hidden>
+      <label id="eleven-label" for="eleven-input">Check my maths with your starting number</label>
+      <div class="check-row">
+        <input id="eleven-input" inputmode="numeric" maxlength="3" autocomplete="off" data-check-input />
+        <button class="btn btn--line" type="button" data-check-go>Check</button>
+      </div>
+      <p class="check-out" data-check-out aria-live="polite"></p>
+    </div>
+    <details class="how" data-how hidden>
+      <summary>How did I do it?</summary>
+      <p>
+        After the subtraction, the middle digit is always 9 and the outer two always add up to 9. That leaves only eight possible
+        answers, and every one of them plus its reverse is 1089. The rule about the first and last digits is there for the edge
+        cases, which is where engineers earn their keep.
+      </p>
+    </details>
+  </div>
+</section>
+
+<script>
+  import { ENCORES, markSeen, pickEncore, readSeen, type EncoreId } from '../lib/acts';
+  import { sfx } from '../lib/audio';
+  import { VANISH_AFTER, VANISH_BEFORE, cardName, isRed, steps1089, valid1089, type Card } from '../lib/tricks';
+
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const wait = (ms: number) => new Promise((r) => setTimeout(r, reduced() ? 0 : ms));
+
+  function show(root: HTMLElement, id: EncoreId, scroll = false) {
+    root.querySelectorAll<HTMLElement>('[data-encore]').forEach((el) => (el.hidden = el.dataset.encore !== id));
+    root.dataset.current = id;
+    if (scroll) document.getElementById(`encore-${id}`)?.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' });
+  }
+
+  document.addEventListener('astro:page-load', () => {
+    const root = document.querySelector<HTMLElement>('[data-encore-root]');
+    if (!root) return;
+    const id = pickEncore(location.hash, root.dataset.favourite as EncoreId, readSeen());
+    show(root, id, location.hash.startsWith('#encore-'));
+  });
+
+  /* ---------- Act IV ---------- */
+
+  function paint(li: HTMLElement, c: Card) {
+    li.classList.toggle('is-red', isRed(c));
+    li.querySelector('[data-card-name]')!.textContent = cardName(c);
+    li.querySelectorAll('[data-corner]').forEach((el) => (el.textContent = `${c.rank}${c.suit}`));
+    li.querySelector('[data-pip]')!.textContent = c.suit;
+  }
+
+  async function vanish(act: HTMLElement) {
+    const court = act.querySelector<HTMLElement>('[data-court]')!;
+    const go = act.querySelector<HTMLButtonElement>('[data-vanish-go]')!;
+    const reset = act.querySelector<HTMLButtonElement>('[data-vanish-reset]')!;
+    const result = act.querySelector<HTMLElement>('[data-result]')!;
+    const cards = [...court.querySelectorAll<HTMLElement>('.pcard')];
+    go.disabled = true;
+    sfx('flip');
+    court.classList.add('is-down');
+    await wait(650);
+    cards.forEach((li, i) => {
+      const next = VANISH_AFTER[i];
+      if (next) paint(li, next);
+      else li.hidden = true;
+    });
+    court.setAttribute('aria-label', 'Five playing cards');
+    await wait(250);
+    court.classList.remove('is-down');
+    sfx('flip');
+    await wait(500);
+    result.textContent = 'Your card is gone. I took it, like I said I would.';
+    sfx('reveal');
+    go.hidden = true;
+    go.disabled = false;
+    reset.hidden = false;
+    act.querySelector<HTMLElement>('[data-how]')!.hidden = false;
+    markSeen('vanish');
+  }
+
+  function vanishReset(act: HTMLElement) {
+    const court = act.querySelector<HTMLElement>('[data-court]')!;
+    [...court.querySelectorAll<HTMLElement>('.pcard')].forEach((li, i) => {
+      li.hidden = false;
+      paint(li, VANISH_BEFORE[i]!);
+    });
+    court.setAttribute('aria-label', 'Six playing cards');
+    act.querySelector<HTMLElement>('[data-result]')!.textContent = '';
+    act.querySelector<HTMLButtonElement>('[data-vanish-reset]')!.hidden = true;
+    const go = act.querySelector<HTMLButtonElement>('[data-vanish-go]')!;
+    go.hidden = false;
+    go.focus();
+  }
+
+  /* ---------- Act V ---------- */
+
+  const STEPS = ['Got your number? Good. Double it.', 'Add 10.', 'Halve it.', 'Now take away the number you first thought of.'];
+
+  function step(act: HTMLElement, restart = false) {
+    const stepper = act.querySelector<HTMLElement>('[data-stepper]')!;
+    const text = act.querySelector<HTMLElement>('[data-step-text]')!;
+    const count = act.querySelector<HTMLElement>('[data-step-count]')!;
+    const next = act.querySelector<HTMLButtonElement>('[data-step-next]')!;
+    const again = act.querySelector<HTMLButtonElement>('[data-step-again]')!;
+    const at = restart ? 0 : Number(stepper.dataset.at ?? '0') + 1;
+    stepper.dataset.at = String(at);
+    stepper.classList.remove('is-done');
+    if (at < STEPS.length) {
+      text.textContent = STEPS[at]!;
+      count.textContent = `Step ${at + 1} of ${STEPS.length + 1}`;
+      next.hidden = false;
+      again.hidden = true;
+      if (restart) next.focus();
+      return;
+    }
+    count.textContent = `Step ${STEPS.length + 1} of ${STEPS.length + 1}`;
+    text.textContent = "You're thinking of 5.";
+    stepper.classList.add('is-done');
+    next.hidden = true;
+    again.hidden = false;
+    again.focus();
+    act.querySelector<HTMLElement>('[data-how]')!.hidden = false;
+    sfx('reveal');
+    markSeen('number');
+  }
+
+  /* ---------- Act VI ---------- */
+
+  function turn(act: HTMLElement) {
+    act.querySelector('[data-sealed]')!.classList.add('is-turned');
+    act.querySelector<HTMLElement>('[data-sealed-sr]')!.textContent = 'The card says 1089.';
+    act.querySelector<HTMLButtonElement>('[data-turn]')!.hidden = true;
+    act.querySelector<HTMLElement>('[data-check]')!.hidden = false;
+    act.querySelector<HTMLElement>('[data-how]')!.hidden = false;
+    sfx('flip');
+    setTimeout(() => sfx('reveal'), reduced() ? 0 : 450);
+    markSeen('eleven');
+  }
+
+  // Plain buttons rather than a form, so the in-site router never treats this as a page navigation.
+  function check(act: HTMLElement) {
+    const out = act.querySelector<HTMLElement>('[data-check-out]')!;
+    const n = Number(act.querySelector<HTMLInputElement>('[data-check-input]')!.value.trim());
+    if (!valid1089(n)) {
+      out.textContent = 'That one breaks the rule. Try a three-digit number whose first and last digits differ by 2 or more, like 742.';
+      return;
+    }
+    const s = steps1089(n);
+    const pad = (x: number) => String(x).padStart(3, '0');
+    out.textContent = `${n} reversed is ${pad(s.reversed)}. The difference is ${pad(s.diff)}, which reversed is ${pad(s.diffReversed)}. ${pad(s.diff)} + ${pad(s.diffReversed)} = ${s.total}. Told you.`;
+    sfx('chime');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' || !(e.target instanceof HTMLInputElement) || !e.target.matches('[data-check-input]')) return;
+    e.preventDefault();
+    const act = e.target.closest<HTMLElement>('[data-encore]');
+    if (act) check(act);
+  });
+
+  /* ---------- Wiring ---------- */
+
+  document.addEventListener('click', (e) => {
+    const t = e.target instanceof Element ? e.target : null;
+    const root = t?.closest<HTMLElement>('[data-encore-root]');
+    if (!t || !root) return;
+    const act = t.closest<HTMLElement>('[data-encore]');
+
+    if (t.closest('[data-encore-next]')) {
+      const current = (root.dataset.current ?? root.dataset.favourite) as EncoreId;
+      const seen = readSeen();
+      const order = [...ENCORES.slice(ENCORES.indexOf(current) + 1), ...ENCORES.slice(0, ENCORES.indexOf(current))];
+      const next = order.find((id) => !seen.has(id)) ?? order[0]!;
+      show(root, next);
+      sfx('whoosh');
+      document.getElementById(`encore-${next}`)?.querySelector<HTMLElement>('h3')?.setAttribute('tabindex', '-1');
+      document.getElementById(`encore-${next}`)?.querySelector<HTMLElement>('h3')?.focus();
+      return;
+    }
+    if (!act) return;
+    if (t.closest('[data-vanish-go]')) void vanish(act);
+    else if (t.closest('[data-vanish-reset]')) vanishReset(act);
+    else if (t.closest('[data-step-next]')) step(act);
+    else if (t.closest('[data-step-again]')) step(act, true);
+    else if (t.closest('[data-turn]')) turn(act);
+    else if (t.closest('[data-check-go]')) check(act);
+  });
+</script>
+
+<style>
+  .encore {
+    margin-top: 72px;
+    padding: clamp(24px, 4vw, 40px);
+    border-radius: var(--radius);
+    background: var(--bg-deep);
+  }
+
+  .encore-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+    margin-bottom: 24px;
+  }
+
+  .encore-head h2 {
+    margin: 0;
+    font-size: clamp(40px, 5vw, 56px);
+    color: var(--brass);
+  }
+
+  .act {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    scroll-margin-top: 24px;
+  }
+
+  .act[hidden] {
+    display: none;
+  }
+
+  .act-head h3 {
+    margin: 0 0 8px;
+    font-size: clamp(30px, 3.4vw, 40px);
+  }
+
+  .act-head h3:focus {
+    outline: none;
+  }
+
+  .act-head p {
+    margin: 0;
+    max-width: 56ch;
+    color: var(--muted);
+  }
+
+  .act-head .kicker {
+    margin-bottom: 6px;
+    color: var(--brass);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  /* Playing cards */
+  .court {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    /* Three across on a phone, so all six cards fit on screen at once: the trick needs that. */
+    grid-template-columns: repeat(auto-fill, minmax(min(112px, 28%), 1fr));
+    gap: 14px;
+    perspective: 900px;
+  }
+
+  .pcard {
+    aspect-ratio: 5 / 7;
+  }
+
+  .pcard-inner {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 600ms cubic-bezier(0.4, 0.1, 0.2, 1);
+  }
+
+  .court.is-down .pcard-inner {
+    transform: rotateY(180deg);
+  }
+
+  .pcard:nth-child(2) .pcard-inner {
+    transition-delay: 40ms;
+  }
+
+  .pcard:nth-child(3) .pcard-inner {
+    transition-delay: 80ms;
+  }
+
+  .pcard:nth-child(4) .pcard-inner {
+    transition-delay: 120ms;
+  }
+
+  .pcard:nth-child(5) .pcard-inner {
+    transition-delay: 160ms;
+  }
+
+  .pcard:nth-child(6) .pcard-inner {
+    transition-delay: 200ms;
+  }
+
+  .pcard-face,
+  .pcard-back {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    backface-visibility: hidden;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  @media (max-width: 560px) {
+    .court {
+      gap: 10px;
+    }
+
+    .court .pcard-face {
+      padding: 8px 9px;
+    }
+  }
+
+  .pcard-face {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--card);
+    color: var(--card-ink);
+    font-family: var(--font-display);
+    font-size: clamp(20px, 2.4vw, 26px);
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .is-red .pcard-face {
+    color: var(--card-red);
+  }
+
+  .pip {
+    align-self: center;
+    font-size: clamp(40px, 5vw, 58px);
+  }
+
+  .corner--b {
+    align-self: flex-end;
+    transform: rotate(180deg);
+  }
+
+  .pcard-back {
+    transform: rotateY(180deg);
+    background:
+      repeating-linear-gradient(45deg, rgba(217, 179, 108, 0.35) 0 2px, transparent 2px 10px),
+      repeating-linear-gradient(-45deg, rgba(217, 179, 108, 0.35) 0 2px, transparent 2px 10px),
+      var(--surface-2);
+    border: 6px solid var(--card);
+  }
+
+  .result {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(22px, 2.4vw, 28px);
+    color: var(--brass);
+  }
+
+  .result:empty {
+    display: none;
+  }
+
+  /* Stepper */
+  .stepper {
+    padding: 24px clamp(20px, 3vw, 28px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .step-count {
+    margin: 0;
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .step-text {
+    margin: 0;
+    min-height: 2.3em;
+    font-size: clamp(28px, 3.4vw, 40px);
+    line-height: 1.15;
+  }
+
+  .is-done .step-text {
+    color: var(--brass);
+    animation: pop 500ms cubic-bezier(0.2, 1.4, 0.4, 1);
+  }
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.85);
+    }
+  }
+
+  /* The 1089 */
+  .eleven {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px 40px;
+  }
+
+  .eleven-steps {
+    flex: 1 1 380px;
+    margin: 0;
+    padding-left: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .eleven-steps li::marker {
+    color: var(--brass);
+    font-weight: 700;
+  }
+
+  .sealed {
+    flex: 0 0 auto;
+    width: 150px;
+    aspect-ratio: 5 / 7;
+    perspective: 900px;
+  }
+
+  .sealed-inner {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 700ms cubic-bezier(0.4, 0.1, 0.2, 1);
+  }
+
+  .is-turned .sealed-inner {
+    transform: rotateY(180deg);
+  }
+
+  .sealed-back,
+  .sealed-face {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    backface-visibility: hidden;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+
+  .sealed-back {
+    padding: 12px;
+    background:
+      repeating-linear-gradient(45deg, rgba(217, 179, 108, 0.35) 0 2px, transparent 2px 10px),
+      var(--surface-2);
+    border: 6px solid var(--card);
+    color: var(--card);
+    font-weight: 700;
+  }
+
+  .sealed-face {
+    transform: rotateY(180deg);
+    background: var(--card);
+    color: var(--card-red);
+    font-size: 44px;
+  }
+
+  .check {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .check label {
+    font-weight: 600;
+  }
+
+  .check-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .check input {
+    width: 7ch;
+    min-height: 46px;
+    padding: 6px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--text);
+    font: 600 20px/1.2 var(--font-body);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .check input:focus-visible {
+    border-color: var(--brass);
+  }
+
+  .check-out {
+    margin: 0;
+    max-width: 64ch;
+  }
+
+  .check-out:empty {
+    display: none;
+  }
+
+  .how summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--brass);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .how p {
+    margin: 4px 0 0;
+    max-width: 68ch;
+    color: var(--muted);
+  }
+</style>

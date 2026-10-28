@@ -1,0 +1,119 @@
+---
+import Avatar from './Avatar.astro';
+import ColdRead from './ColdRead.astro';
+import { person } from '../lib/profile';
+import { TAGLINES } from '../lib/cold-read';
+---
+
+<section id="top" class="hero wrap" aria-labelledby="hero-title" data-dwell="the cold read">
+  <div class="hero-copy">
+    <h1 id="hero-title" class="display">{person.name}</h1>
+    <p class="tagline" data-tagline>{TAGLINES.fullstack}</p>
+    <ColdRead />
+  </div>
+
+  <div class="spotlight" aria-hidden="true">
+    <div class="glow"></div>
+    <div class="podium"></div>
+    <div class="performer">
+      <Avatar scale={8} label="" />
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 48px 56px;
+    padding-block: 40px 96px;
+  }
+
+  .hero-copy {
+    flex: 1 1 560px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(64px, 9vw, 118px);
+    line-height: 0.95;
+    letter-spacing: -0.025em;
+  }
+
+  .tagline {
+    margin: 0;
+    max-width: 36ch;
+    font-size: clamp(19px, 2vw, 23px);
+    line-height: 1.5;
+  }
+
+  .spotlight {
+    position: relative;
+    flex: 1 1 340px;
+    max-width: 400px;
+    margin-inline: auto;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 48px;
+  }
+
+  .glow {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 42%, rgba(217, 179, 108, 0.38), rgba(217, 179, 108, 0.08) 55%, rgba(217, 179, 108, 0) 70%);
+    animation: breathe 6s ease-in-out infinite;
+  }
+
+  .podium {
+    position: absolute;
+    bottom: 36px;
+    left: 50%;
+    width: 230px;
+    height: 38px;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: var(--bg-deep);
+  }
+
+  .performer {
+    position: relative;
+  }
+
+  @keyframes breathe {
+    50% {
+      opacity: 0.75;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .hero {
+      gap: 8px;
+      padding-block: 4px 56px;
+    }
+
+    .spotlight {
+      order: -1;
+      flex: 0 0 190px;
+      padding-bottom: 22px;
+    }
+
+    .spotlight :global(svg) {
+      width: 84px;
+      height: auto;
+    }
+
+    .podium {
+      bottom: 16px;
+      width: 120px;
+      height: 20px;
+    }
+  }
+</style>

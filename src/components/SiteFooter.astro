@@ -1,0 +1,38 @@
+---
+import { person } from '../lib/profile';
+---
+
+<footer class="site-footer">
+  <div class="wrap footer-small">
+    <p>
+      <a href={`mailto:${person.email}`}>{person.email}</a>, {person.location}.
+    </p>
+    <p>
+      No cookies and no tracking. Every trick happens in your browser and stays there. The music is played live by your
+      browser too, no recordings. Built with Astro, hosted on GitHub Pages, and the <a href={person.source}>source is on GitHub</a>.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--line);
+    background: var(--bg-deep);
+  }
+
+  .footer-small {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 8px 40px;
+    /* Leave room for the program button in the corner. */
+    padding-block: 28px calc(92px + env(safe-area-inset-bottom, 0px));
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  .footer-small p {
+    margin: 0;
+    max-width: 72ch;
+  }
+</style>

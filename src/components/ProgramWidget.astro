@@ -1,0 +1,205 @@
+---
+import { ACTS } from '../lib/acts';
+---
+
+<div class="program" transition:persist="program">
+  <button class="program-button" type="button" popovertarget="program-panel" data-sfx="flip">
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+      <rect x="4" y="2.5" width="12" height="15" rx="1.5"></rect>
+      <path d="M7 7h6M7 10h6M7 13h4"></path>
+    </svg>
+    <span class="program-label">Tonight's program</span>
+    <span class="program-count" data-program-count>0 of {ACTS.length}</span>
+  </button>
+
+  <div id="program-panel" class="program-panel" popover>
+    <h2 class="display">Tonight's program</h2>
+    <p class="program-intro">Eight acts, hidden around the site. Ticks mean you've seen them.</p>
+    <ol class="acts">
+      {
+        ACTS.map((act) => (
+          <li data-act={act.id}>
+            <span class="tick" aria-hidden="true" />
+            <span class="act-text">
+              <span class="act-name">
+                {act.numeral}. {act.href ? <a href={act.href}>{act.name}</a> : act.name}
+                <span class="visually-hidden" data-act-status>
+                  , not seen yet
+                </span>
+              </span>
+              <span class="act-where">{act.where}</span>
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+    <button class="btn btn--line" type="button" popovertarget="program-panel" popovertargetaction="hide">Close</button>
+  </div>
+</div>
+
+<script>
+  import { ACTS, readSeen } from '../lib/acts';
+
+  function update() {
+    const seen = readSeen();
+    document.querySelectorAll<HTMLElement>('[data-program-count]').forEach((el) => (el.textContent = `${seen.size} of ${ACTS.length}`));
+    document.querySelectorAll<HTMLElement>('.program-panel [data-act]').forEach((li) => {
+      const done = seen.has(li.dataset.act as never);
+      li.classList.toggle('is-seen', done);
+      const status = li.querySelector('[data-act-status]');
+      if (status) status.textContent = done ? ', seen' : ', not seen yet';
+    });
+  }
+
+  document.addEventListener('act:seen', () => {
+    update();
+    // A small bow from the program whenever a new act is ticked off.
+    const button = document.querySelector<HTMLElement>('.program-button');
+    button?.classList.remove('is-bump');
+    void button?.offsetWidth;
+    button?.classList.add('is-bump');
+  });
+  document.addEventListener('astro:page-load', update);
+  // Close the program when one of its links is followed.
+  document.addEventListener('click', (e) => {
+    if (e.target instanceof Element && e.target.closest('.program-panel a')) document.getElementById('program-panel')?.hidePopover?.();
+  });
+</script>
+
+<style>
+  .program {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 50;
+  }
+
+  .program-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 8px 18px;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font: 600 15px/1.2 var(--font-body);
+    box-shadow: 0 12px 30px rgba(4, 16, 19, 0.45);
+    cursor: pointer;
+  }
+
+  .program-button:hover {
+    border-color: var(--brass);
+  }
+
+  .program-button.is-bump {
+    animation: bump 700ms ease-out;
+  }
+
+  @keyframes bump {
+    30% {
+      transform: scale(1.08);
+      border-color: var(--brass);
+    }
+  }
+
+  @media (max-width: 720px) {
+    .program-button {
+      padding: 8px 14px;
+    }
+
+    .program-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  }
+
+  .program-count {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--brass);
+    color: var(--bg);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .program-panel {
+    width: min(440px, calc(100vw - 32px));
+    max-height: min(640px, calc(100vh - 32px));
+    overflow: auto;
+    margin: auto max(16px, env(safe-area-inset-right, 0px)) calc(76px + env(safe-area-inset-bottom, 0px)) auto;
+    padding: 24px 24px 20px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-deep);
+    color: var(--text);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  }
+
+  .program-panel::backdrop {
+    background: rgba(4, 16, 19, 0.45);
+  }
+
+  .program-panel h2 {
+    margin: 0;
+    font-size: 32px;
+  }
+
+  .program-intro {
+    margin: 6px 0 16px;
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  .acts {
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .acts li {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .tick {
+    width: 22px;
+    height: 22px;
+    margin-top: 2px;
+    border-radius: 50%;
+    border: 1.5px solid var(--line);
+  }
+
+  .is-seen .tick {
+    border-color: var(--brass);
+    background: var(--brass) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3L15 6.5' fill='none' stroke='%2310292e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+  }
+
+  .act-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .act-name {
+    font-weight: 600;
+  }
+
+  .act-where {
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  :global(body.plain) .program {
+    display: none;
+  }
+</style>
