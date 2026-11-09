@@ -62,7 +62,6 @@ import { TAGLINES } from '../lib/cold-read';
 <style>
   .hero {
     position: relative;
-    isolation: isolate;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
     grid-template-areas:
@@ -73,15 +72,22 @@ import { TAGLINES } from '../lib/cold-read';
     padding-block: 40px 96px;
   }
 
-  /* The spotlight that follows the pointer. Off for touch and reduced motion; it only appears once the mouse moves. */
+  /* The spotlight that follows the pointer. Off for touch and reduced motion; it only appears once the mouse moves.
+     The light is its own circle, centred on the pointer and big enough that the gradient fades out before its edges,
+     so no box can cut it off. z-index -1 with no isolation on .hero puts it behind the whole page (header and the next
+     section included), just above the page background; main clips any sideways spill (see global.css). */
   .hero::before {
     content: '';
     position: absolute;
     z-index: -1;
-    inset: -40px 0 0;
+    left: var(--mx, 70%);
+    top: var(--my, 40%);
+    width: 840px;
+    height: 840px;
+    translate: -50% -50%;
     pointer-events: none;
     opacity: 0;
-    background: radial-gradient(420px circle at var(--mx, 70%) var(--my, 40%), var(--gel-amber), transparent 70%);
+    background: radial-gradient(420px circle at center, var(--gel-amber), transparent 70%);
     transition: opacity 600ms ease;
   }
 

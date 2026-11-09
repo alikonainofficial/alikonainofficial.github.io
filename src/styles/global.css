@@ -101,6 +101,12 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* The hero's pointer light can reach past the screen's sides; clip it there so it never adds a sideways scrollbar.
+   clip (unlike hidden) doesn't make main a scroll container. */
+main {
+  overflow-x: clip;
+}
+
 img,
 svg {
   display: block;
