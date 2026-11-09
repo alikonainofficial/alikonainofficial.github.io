@@ -67,7 +67,7 @@ Links that leave the site (LinkedIn, GitHub, the arcade games, project pages) op
 - Case studies as Markdown in a typed content collection (`src/content/work`)
 - Pixel art as data: the avatar (and its secret top hat) are character grids in `src/lib/sprite.ts`, rendered to SVG at build time. The 300,000-book cover is drawn in code by `scripts/draw-books-cover.mjs`
 - Trick logic as pure, unit-tested functions: `src/lib/cold-read.ts`, `src/lib/tricks.ts`, `src/lib/acts.ts`
-- Fonts, self-hosted via Fontsource: Fraunces with its soft and wonky axes on (headlines, and the host's italic voice), Figtree (reading), Pixelify Sans and Silkscreen (the game layer: HUD, badges, arcade labels, never paragraphs) and Bungee Shade (the one sign, over the arcade)
+- Fonts, self-hosted via Fontsource: Fraunces with its soft and wonky axes on (headlines, and the host's italic voice), Figtree (reading), Pixelify Sans and Silkscreen (the game layer: HUD, badges, "Press start", never paragraphs or titles) and Bungee Shade (the one sign, over the arcade)
 - No cookies, no analytics, no third-party requests
 
 ## Run it
