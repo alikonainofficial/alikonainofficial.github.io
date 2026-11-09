@@ -44,6 +44,19 @@ Every visit starts in silence, because browsers don't allow sound before the vis
 
 The music is a small generative lounge-jazz band written with the Web Audio API in `src/lib/audio.ts`: walking bass, brushes, a ride cymbal and electric-piano chords over a ii–V–I, swung at 92 BPM. Buttons get short synthesized sound effects. There are no audio files, and the band keeps playing between pages because the site uses Astro's client router.
 
+## Look
+
+The Midnight Jazz Club, with the stage lights up. Colour follows 60-30-10: the teal room, brass and cream as the house colours, and coral reserved for the peaks (a trick landing, an act ticked off, the seal on the envelope, 8 of 8). Each section is lit by its own theatre gel, which comes up as you scroll in browsers that support scroll-driven animation and is simply on everywhere else.
+
+- **The avatar is alive.** He breathes in two frames, blinks, follows the pointer with his eyes, hops when a trick lands (tipping the hat, if you've found it) and shrugs at "Not now". The sprite is drawn in layers so the legs stay planted.
+- **The program is a game HUD**: a hand of eight playing cards dealt face up as acts are seen, an "Act III ✓" badge and a chiptune sting for each one, and a curtain call with a burst of pixel cards at 8 of 8. It tucks away while you scroll down and comes back when you scroll up. On small phones it shrinks to one card and the score.
+- **The host speaks from an RPG dialogue box**, and the arcade has cabinet bezels, scanlines and screens tinted to the room until you reach for one.
+- **A curtain closes between pages** and opens on the next one, while the band keeps playing.
+- **The spotlight follows the mouse** in the hero, on desktops only.
+- **House lights:** the bulb in the header switches to a daylight version of the club, built from the résumé's cream, and remembers the choice. Dark stays the default, because it's a nightclub.
+
+Everything that moves has a still version under reduced motion. Every text colour pair passes WCAG AA in both lights.
+
 ## Links
 
 Links that leave the site (LinkedIn, GitHub, the arcade games, project pages) open in a new tab, and say so to screen readers. Components use `NewTabLink`; links written in the case-file Markdown get the same treatment from a small Sätteri plugin in `src/lib/new-tab.ts`. Links within the site stay in the same tab, so the music and the program carry on.
@@ -52,9 +65,9 @@ Links that leave the site (LinkedIn, GitHub, the arcade games, project pages) op
 
 - [Astro](https://astro.build) 7, fully static, TypeScript in strict mode, `ClientRouter` for page transitions
 - Case studies as Markdown in a typed content collection (`src/content/work`)
-- Pixel art as data: the avatar (and its secret top hat) are character grids in `src/lib/sprite.ts`, rendered to SVG at build time
+- Pixel art as data: the avatar (and its secret top hat) are character grids in `src/lib/sprite.ts`, rendered to SVG at build time. The 300,000-book cover is drawn in code by `scripts/draw-books-cover.mjs`
 - Trick logic as pure, unit-tested functions: `src/lib/cold-read.ts`, `src/lib/tricks.ts`, `src/lib/acts.ts`
-- Fonts: Fraunces and Figtree, self-hosted via Fontsource
+- Fonts, self-hosted via Fontsource: Fraunces with its soft and wonky axes on (headlines, and the host's italic voice), Figtree (reading), Pixelify Sans and Silkscreen (the game layer: HUD, badges, arcade labels, never paragraphs) and Bungee Shade (the one sign, over the arcade)
 - No cookies, no analytics, no third-party requests
 
 ## Run it
@@ -75,9 +88,10 @@ npm run build    # type check, then build to dist/
 ```
 src/
   components/   Stage, ColdRead, Work, EngineerTrick, Story, Arcade, Finale, Encore,
-                ProgramWidget, SoundToggle, SiteScripts, header and footer
+                ProgramWidget, SoundToggle, LightsToggle, SiteScripts, header and footer
   content/work/ one Markdown case file per project
-  lib/          profile data, sprites, audio, trick logic and tests
+  lib/          profile data, sprites, audio, the card burst, trick logic and tests
+scripts/        draws the pixel-art cover for the book pipeline
   pages/        home, résumé, case files, 404, favicon
 ```
 

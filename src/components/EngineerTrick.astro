@@ -7,7 +7,7 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
 
 <section id="engineer" class="engineer" aria-labelledby="engineer-title" data-dwell="the engineer's trick">
   <div class="wrap inner" data-engineer>
-    <div class="section-head">
+    <div class="section-head gel-cyan">
       <h2 id="engineer-title" class="display">Think of a number from 1 to 63.</h2>
       <p>Keep it to yourself. Tick every card your number appears on, and I'll tell you what it is.</p>
     </div>
@@ -221,7 +221,7 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
   .answer :global(.answer-number) {
     margin: 0;
     font-size: clamp(72px, 10vw, 120px);
-    color: var(--brass);
+    color: var(--marquee);
     animation: pop 500ms cubic-bezier(0.2, 1.4, 0.4, 1);
   }
 

@@ -11,7 +11,7 @@
  * hear. The band keeps playing between pages of the same visit.
  */
 
-export type Sfx = 'click' | 'tick' | 'flip' | 'chime' | 'reveal' | 'whoosh';
+export type Sfx = 'click' | 'tick' | 'flip' | 'chime' | 'reveal' | 'whoosh' | 'unlock' | 'fanfare';
 
 const BPM = 92;
 const BEAT = 60 / BPM;
@@ -301,6 +301,16 @@ export function sfx(name: Sfx): void {
       break;
     case 'reveal':
       [523.3, 659.3, 784, 1046.5].forEach((f, i) => tone(f, t + i * 0.07, 0.5, 0.08, 'triangle'));
+      break;
+    // An act ticked off: a quick square-wave arpeggio, like picking up an item in a 16-bit game.
+    case 'unlock':
+      [987.8, 1318.5, 1975.5].forEach((f, i) => tone(f, t + i * 0.055, 0.09, 0.05, 'square'));
+      break;
+    // All eight acts: a short chiptune fanfare for the curtain call.
+    case 'fanfare':
+      [523.3, 523.3, 523.3, 659.3, 784, 659.3, 784, 1046.5].forEach((f, i) =>
+        tone(f, t + [0, 0.1, 0.2, 0.3, 0.5, 0.65, 0.75, 0.9][i]!, i === 7 ? 0.6 : 0.09, 0.045, 'square'),
+      );
       break;
   }
 }

@@ -2,7 +2,7 @@
 import { FALLBACK_READING } from '../lib/cold-read';
 ---
 
-<div class="read panel" data-cold-read>
+<div class="read dialogue" data-cold-read>
   <!-- Screen readers get the finished text at once; the typed copy is decoration. -->
   <div class="visually-hidden" aria-live="polite" data-sr></div>
 
@@ -124,12 +124,12 @@ import { FALLBACK_READING } from '../lib/cold-read';
 </script>
 
 <style>
+  /* The host speaks from an RPG dialogue box (see .dialogue in global.css). */
   .read {
     padding: 26px clamp(20px, 3vw, 30px);
     display: flex;
     flex-direction: column;
     gap: 14px;
-    box-shadow: 0 18px 40px rgba(4, 16, 19, 0.35);
   }
 
   .guess {
@@ -176,16 +176,21 @@ import { FALLBACK_READING } from '../lib/cold-read';
     background: transparent;
     color: var(--brass);
     cursor: pointer;
-    animation: nudge 1.2s ease-in-out infinite;
+    animation: nudge 1s steps(1, end) infinite;
   }
 
   .skip-typing[hidden] {
     display: none;
   }
 
+  /* The "more text" arrow of a game's dialogue box: it hops in two frames. */
   @keyframes nudge {
+    0%,
+    100% {
+      transform: none;
+    }
     50% {
-      transform: translateY(3px);
+      transform: translateY(4px);
     }
   }
 </style>

@@ -1,28 +1,83 @@
-/* Midnight Jazz Club: a calm, after-hours lounge where the cold read happens. */
+/*
+ * Midnight Jazz Club, Act Two: the same after-hours lounge, with the stage lights up.
+ *
+ * Colour follows 60-30-10: the teal room, brass and cream as the house colours,
+ * and coral "marquee" reserved for the peaks (a trick landing, an act unlocked,
+ * the seal, 8 of 8). Theatre gels tint the light behind each section and are
+ * never used for text.
+ */
 
 :root {
-  --bg: #10292e;
-  --bg-deep: #0c2125;
-  --surface: #173840;
-  --surface-2: #1d4550;
-  --line: #24515a;
-  --text: #e8efe9;
-  --muted: #a9bfb7;
-  --brass: #d9b36c;
-  --brass-hi: #e8c88a;
-  --rose: #e09a90;
+  /* 60: the room */
+  --bg: #0e2427;
+  --bg-deep: #0a1c1f;
+  --surface: #163a42;
+  --surface-2: #1e4852;
+  --line: #2a5a63;
+  --text: #eef3ec;
+  --muted: #b3c8c0;
+  --chip: #cfe0d9;
+
+  /* 30: brass and cream, the house colours */
+  --brass: #e2bb6e;
+  --brass-hi: #efd096;
+  --rose: #e7a196;
   --card: #f3efe6;
   --card-ink: #1d1d1f;
   --card-red: #b0423a;
+  /* Card backs and the program's pips stay dark in either light. */
+  --card-back: #1e4852;
+
+  /* 10: peaks only */
+  --marquee: #ff7a59;
+
+  /* Theatre gels: light, never text */
+  --gel-amber: rgba(226, 187, 110, 0.3);
+  --gel-cyan: rgba(95, 224, 212, 0.2);
+  --gel-magenta: rgba(240, 140, 200, 0.2);
+  --gel-coral: rgba(255, 122, 89, 0.24);
+  --spot: rgba(226, 187, 110, 0.38);
+  --shadow: rgba(4, 16, 19, 0.45);
 
   --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
   --font-body: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* The game layer: HUD, counters, arcade labels. Never paragraphs. */
+  --font-game: 'Pixelify Sans Variable', 'Silkscreen', 'Courier New', monospace; /* weight 400: heavier weights turn C into O and B into 8 */
+  --font-label: 'Silkscreen', 'Pixelify Sans Variable', 'Courier New', monospace;
+  --font-sign: 'Bungee Shade', Impact, 'Arial Black', sans-serif;
 
   --page: 1240px;
   --gutter: max(16px, min(4vw, 32px));
   --radius: 18px;
 
   color-scheme: dark;
+}
+
+/* House lights up: the room in daylight, using the résumé's cream. Chosen with the bulb in the header. */
+:root[data-lights='up'] {
+  --bg: #f6f1e7;
+  --bg-deep: #ebe3d2;
+  --surface: #fffcf6;
+  --surface-2: #f1eadc;
+  --line: #cfc3ab;
+  --text: #14292c;
+  --muted: #4c5b56;
+  --chip: #2c3b38;
+
+  --brass: #7f5b17;
+  --brass-hi: #634510;
+  --rose: #a3433a;
+  --card: #ffffff;
+  --marquee: #b23c12;
+
+  --gel-amber: rgba(226, 170, 70, 0.32);
+  --gel-cyan: rgba(40, 170, 160, 0.16);
+  --gel-magenta: rgba(220, 90, 160, 0.14);
+  --gel-coral: rgba(240, 110, 70, 0.2);
+  --spot: rgba(236, 180, 80, 0.42);
+  --shadow: rgba(60, 45, 20, 0.16);
+
+  color-scheme: light;
 }
 
 *,
@@ -82,21 +137,86 @@ p {
   padding-inline: var(--gutter);
 }
 
+/* Fraunces with its soft, wonky letterforms switched on. */
 .display {
   font-family: var(--font-display);
   font-weight: 500;
   font-optical-sizing: auto;
+  font-variation-settings:
+    'SOFT' 100,
+    'WONK' 1;
   letter-spacing: -0.015em;
   line-height: 1;
 }
 
+/* Small pixel labels: eyebrows, badges, card corners. */
+.eyebrow {
+  margin: 0;
+  font: 700 12px/1.3 var(--font-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+
+/*
+ * Section heads are lit by a theatre gel. Each section picks its colour with
+ * --gel. Where the browser supports scroll-driven animation, the light comes
+ * up as the section arrives; elsewhere it is simply on.
+ */
 .section-head {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: end;
   justify-content: space-between;
   gap: 12px 40px;
   margin-bottom: 32px;
+  isolation: isolate;
+}
+
+.section-head::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: -90px;
+  top: -110px;
+  width: min(560px, 90vw);
+  height: 320px;
+  pointer-events: none;
+  background: radial-gradient(closest-side, var(--gel, var(--gel-amber)), transparent);
+}
+
+.gel-amber {
+  --gel: var(--gel-amber);
+}
+
+.gel-cyan {
+  --gel: var(--gel-cyan);
+}
+
+.gel-magenta {
+  --gel: var(--gel-magenta);
+}
+
+.gel-coral {
+  --gel: var(--gel-coral);
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .section-head::before {
+      animation: gel-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 45%;
+    }
+  }
+}
+
+@keyframes gel-up {
+  from {
+    opacity: 0.15;
+    transform: scale(0.7);
+  }
 }
 
 .section-head h2 {
@@ -151,7 +271,10 @@ p {
   font: 700 16px/1.2 var(--font-body);
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    border-color 160ms ease;
 }
 
 .btn--brass {
@@ -171,7 +294,7 @@ p {
 }
 
 .btn--line:hover {
-  background: rgba(217, 179, 108, 0.12);
+  background: color-mix(in srgb, var(--brass) 12%, transparent);
   color: var(--brass-hi);
 }
 
@@ -181,7 +304,7 @@ p {
 }
 
 .btn--light:hover {
-  background: #ffffff;
+  background: color-mix(in srgb, var(--text) 85%, var(--bg));
   color: var(--bg);
 }
 
@@ -204,7 +327,7 @@ p {
   padding: 5px 12px;
   border-radius: 999px;
   background: var(--bg);
-  color: #cfe0d9;
+  color: var(--chip);
   font-size: 15px;
   line-height: 1.35;
 }
@@ -214,7 +337,29 @@ p {
   border-radius: var(--radius);
 }
 
-/* A small toast for tricks that announce themselves. */
+/* In daylight a panel needs an edge to stand off the cream. */
+:root[data-lights='up'] .panel {
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 10px 28px var(--shadow);
+}
+
+/*
+ * An RPG dialogue box: the host's lines live in one. A hard double rule and a
+ * pixel drop shadow read as a handheld game; the text inside stays easy to read.
+ */
+.dialogue {
+  position: relative;
+  border: 3px solid var(--brass);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow:
+    inset 0 0 0 4px var(--surface),
+    inset 0 0 0 6px color-mix(in srgb, var(--brass) 40%, transparent),
+    6px 6px 0 var(--shadow);
+}
+
+/* A small toast for tricks that announce themselves. Coral, because it only ever marks a peak. */
 .toast {
   position: fixed;
   left: 50%;
@@ -224,10 +369,10 @@ p {
   transform: translateX(-50%);
   padding: 14px 20px;
   border-radius: 14px;
-  background: var(--brass);
+  background: var(--marquee);
   color: var(--bg);
   font-weight: 700;
-  box-shadow: 0 16px 40px rgba(4, 16, 19, 0.45);
+  box-shadow: 0 16px 40px var(--shadow);
   animation: toast-in 240ms ease-out;
 }
 
@@ -245,6 +390,33 @@ p {
   }
 }
 
+/* The curtain that closes between pages. Two velvet panels, persisted across navigation. */
+.curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  pointer-events: none;
+  view-transition-name: curtain;
+}
+
+.curtain span {
+  flex: 1 1 50%;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 10px, transparent 10px 26px, rgba(255, 255, 255, 0.05) 26px 30px, transparent 30px 40px),
+    linear-gradient(#8f1f2a, #5e121b);
+  transform: translateX(-101%);
+  transition: transform 260ms cubic-bezier(0.6, 0, 0.3, 1);
+}
+
+.curtain span + span {
+  transform: translateX(101%);
+}
+
+.curtain.is-closed span {
+  transform: none;
+}
+
 sup {
   line-height: 0;
 }
@@ -260,5 +432,9 @@ sup {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+  }
+
+  .curtain {
+    display: none;
   }
 }
