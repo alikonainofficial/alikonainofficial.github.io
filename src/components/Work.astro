@@ -6,7 +6,7 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
 ---
 
 <section id="work" class="work wrap" aria-labelledby="work-title">
-  <div class="section-head">
+  <div class="section-head gel-amber">
     <h2 id="work-title" class="display">The work</h2>
     <p>Four case files. Take your time choosing. I'll be watching which one you keep coming back to.</p>
   </div>
@@ -112,7 +112,7 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
   .card:hover,
   .card:focus-within {
     transform: translateY(-4px);
-    box-shadow: 0 22px 44px rgba(4, 16, 19, 0.45);
+    box-shadow: 0 22px 44px var(--shadow);
   }
 
   .card :global(.cover) {

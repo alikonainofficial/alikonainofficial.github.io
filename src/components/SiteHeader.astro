@@ -1,6 +1,7 @@
 ---
 import { person } from '../lib/profile';
 import SoundToggle from './SoundToggle.astro';
+import LightsToggle from './LightsToggle.astro';
 
 const links = [
   { href: '/#work', label: 'Work' },
@@ -20,7 +21,8 @@ const links = [
   </nav>
   <div class="btn-row">
     <SoundToggle />
-    <a class="btn skip" href="/resume/">Skip the show</a>
+    <LightsToggle />
+    <a class="btn skip" href="/resume/"><span class="sk-full">Skip the show</span><span class="sk-short">Résumé</span></a>
   </div>
 </header>
 
@@ -66,13 +68,13 @@ const links = [
 
   /* An outline, so the jazz button is the one filled pill up here and draws the eye first. */
   .skip {
-    border-color: rgba(232, 239, 233, 0.5);
+    border-color: color-mix(in srgb, var(--text) 50%, transparent);
     color: var(--text);
   }
 
   .skip:hover {
     border-color: var(--text);
-    background: rgba(232, 239, 233, 0.08);
+    background: color-mix(in srgb, var(--text) 8%, transparent);
     color: var(--text);
   }
 
@@ -83,7 +85,7 @@ const links = [
     }
 
     .wordmark {
-      font-size: 22px;
+      font-size: 20px;
     }
 
     nav {
@@ -100,13 +102,29 @@ const links = [
     }
 
     .site-header .btn-row {
-      gap: 8px;
+      gap: 6px;
     }
 
     .site-header .btn {
       min-height: 44px;
-      padding: 6px 14px;
+      padding: 6px 12px;
       font-size: 15px;
+    }
+
+    /* Phones show "Résumé"; screen readers still hear "Skip the show", so the visible word stays inside the name. */
+    .sk-full {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  }
+
+  @media (min-width: 721px) {
+    .sk-short {
+      display: none;
     }
   }
 </style>

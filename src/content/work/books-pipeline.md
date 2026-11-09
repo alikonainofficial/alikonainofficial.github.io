@@ -10,8 +10,8 @@ objective: Fill a new reading and listening app with a usable catalog, and give 
 deployed: Python scrapers and batch tools for metadata, audiobook processing and subtitle generation, OpenAI-based topic tagging, and Supabase for storage.
 outcome: 300,000+ public-domain books with the metadata the app needed, plus faster, more relevant keyword search and early recommendation experiments.
 stack: [Python, OpenAI API, Supabase, PostgreSQL, CSV pipelines]
-cover: ../../assets/work/booktok.png
-coverAlt: A book library screen with shelves of classic titles such as Pride and Prejudice, Frankenstein and Moby Dick.
+cover: ../../assets/work/books-pipeline.png
+coverAlt: Pixel art of a bookshelf feeding books along a conveyor into a processing machine and a database, under the words 300,000+ books.
 encore: number
 label: the 300,000-book pipeline
 links:

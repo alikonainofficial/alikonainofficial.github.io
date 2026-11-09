@@ -66,7 +66,7 @@ const { tone = 'dark' } = Astro.props;
   }
 
   .sound-toggle:hover {
-    background: rgba(217, 179, 108, 0.12);
+    background: color-mix(in srgb, var(--brass) 12%, transparent);
   }
 
   .icon {
@@ -90,17 +90,17 @@ const { tone = 'dark' } = Astro.props;
 
   @keyframes invite-breathe {
     0% {
-      box-shadow: 0 0 0 0 rgba(217, 179, 108, 0.55);
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--brass) 55%, transparent);
     }
     60%,
     100% {
-      box-shadow: 0 0 0 14px rgba(217, 179, 108, 0);
+      box-shadow: 0 0 0 14px transparent;
     }
   }
 
   /* Playing: the bars dance, and the button offers to pause. */
   .sound-toggle[data-state='playing'] {
-    background: rgba(217, 179, 108, 0.14);
+    background: color-mix(in srgb, var(--brass) 14%, transparent);
     color: var(--brass-hi);
   }
 
@@ -150,7 +150,7 @@ const { tone = 'dark' } = Astro.props;
   /* Without motion: a steady ring for the invite, and still bars of different heights. */
   @media (prefers-reduced-motion: reduce) {
     .sound-toggle--dark[data-state='invite'] {
-      box-shadow: 0 0 0 4px rgba(217, 179, 108, 0.3);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--brass) 30%, transparent);
     }
 
     .icon-bars rect:nth-child(odd) {
@@ -166,7 +166,7 @@ const { tone = 'dark' } = Astro.props;
   @media (max-width: 720px) {
     .sound-toggle {
       gap: 8px;
-      padding: 6px 14px;
+      padding: 6px 12px;
       font-size: 15px;
     }
 

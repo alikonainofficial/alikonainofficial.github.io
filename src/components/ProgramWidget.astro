@@ -1,25 +1,34 @@
 ---
 import { ACTS } from '../lib/acts';
+import { person } from '../lib/profile';
+
+// Eight acts, eight playing cards: the program's progress reads like a hand being dealt.
+const SUITS = ['♠', '♥', '♦', '♣', '♠', '♥', '♦', '♣'];
 ---
 
-<div class="program" transition:persist="program">
+<div class="program" transition:persist="program" data-program>
   <button class="program-button" type="button" popovertarget="program-panel" data-sfx="flip">
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-      <rect x="4" y="2.5" width="12" height="15" rx="1.5"></rect>
-      <path d="M7 7h6M7 10h6M7 13h4"></path>
-    </svg>
-    <span class="program-label">Tonight's program</span>
-    <span class="program-count" data-program-count>0 of {ACTS.length}</span>
+    <span class="program-label" aria-hidden="true">Program</span>
+    <span class="pips" aria-hidden="true">
+      {ACTS.map((act, i) => <span class:list={['pip', { 'is-red': i % 4 === 1 || i % 4 === 2 }]} data-pip={act.id}>{SUITS[i]}</span>)}
+    </span>
+    <span class="program-count" aria-hidden="true" data-program-count>0/{ACTS.length}</span>
+    <span class="visually-hidden" data-program-name>Tonight's program, 0 of {ACTS.length} acts seen</span>
   </button>
 
+  <p class="act-badge" data-act-badge hidden aria-hidden="true"></p>
+
   <div id="program-panel" class="program-panel" popover>
-    <h2 class="display">Tonight's program</h2>
-    <p class="program-intro">Eight acts, hidden around the site. Ticks mean you've seen them.</p>
+    <p class="eyebrow">Tonight's program</p>
+    <h2 class="display">Eight acts</h2>
+    <p class="program-intro" data-program-left>Hidden around the site. Ticks mean you've seen them.</p>
     <ol class="acts">
       {
-        ACTS.map((act) => (
+        ACTS.map((act, i) => (
           <li data-act={act.id}>
-            <span class="tick" aria-hidden="true" />
+            <span class:list={['tick', { 'is-red': i % 4 === 1 || i % 4 === 2 }]} aria-hidden="true">
+              {SUITS[i]}
+            </span>
             <span class="act-text">
               <span class="act-name">
                 {act.numeral}. {act.href ? <a href={act.href}>{act.name}</a> : act.name}
@@ -35,35 +44,114 @@ import { ACTS } from '../lib/acts';
     </ol>
     <button class="btn btn--line" type="button" popovertarget="program-panel" popovertargetaction="hide">Close</button>
   </div>
+
+  <dialog class="curtain-call" data-curtain-call aria-labelledby="curtain-call-title">
+    <p class="eyebrow">Curtain call · 8/8</p>
+    <h2 id="curtain-call-title" class="display">You saw the whole show.</h2>
+    <p>All eight acts. Most interviewers stop at three. Thank you for staying to the end.</p>
+    <div class="btn-row">
+      <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>
+      <button class="btn btn--line" type="button" data-curtain-close>Take a bow</button>
+    </div>
+  </dialog>
 </div>
 
 <script>
-  import { ACTS, readSeen } from '../lib/acts';
+  import { ACTS, readSeen, type ActId } from '../lib/acts';
+  import { sfx } from '../lib/audio';
+  import { cardBurst } from '../lib/burst';
 
-  function update() {
+  const total = ACTS.length;
+
+  function update(fresh?: ActId) {
     const seen = readSeen();
-    document.querySelectorAll<HTMLElement>('[data-program-count]').forEach((el) => (el.textContent = `${seen.size} of ${ACTS.length}`));
+    const left = total - seen.size;
+    document.querySelectorAll<HTMLElement>('[data-program-count]').forEach((el) => (el.textContent = `${seen.size}/${total}`));
+    document.querySelectorAll<HTMLElement>('[data-program-name]').forEach((el) => (el.textContent = `Tonight's program, ${seen.size} of ${total} acts seen`));
+    document.querySelectorAll<HTMLElement>('[data-pip]').forEach((pip) => {
+      pip.classList.toggle('is-seen', seen.has(pip.dataset.pip as ActId));
+      pip.classList.toggle('is-fresh', pip.dataset.pip === fresh);
+    });
+    const leftLine = document.querySelector<HTMLElement>('[data-program-left]');
+    if (leftLine)
+      leftLine.textContent =
+        left === 0 ? 'You saw every act. Take a bow.' : left <= 2 ? `${left === 1 ? 'One act' : 'Two acts'} left. You're nearly there.` : `Hidden around the site. ${left} to go.`;
     document.querySelectorAll<HTMLElement>('.program-panel [data-act]').forEach((li) => {
-      const done = seen.has(li.dataset.act as never);
+      const done = seen.has(li.dataset.act as ActId);
       li.classList.toggle('is-seen', done);
       const status = li.querySelector('[data-act-status]');
       if (status) status.textContent = done ? ', seen' : ', not seen yet';
     });
   }
 
-  document.addEventListener('act:seen', () => {
-    update();
+  let badgeTimer: number | undefined;
+  function badge(id: ActId) {
+    const el = document.querySelector<HTMLElement>('[data-act-badge]');
+    const act = ACTS.find((a) => a.id === id);
+    if (!el || !act) return;
+    el.textContent = `Act ${act.numeral} ✓`;
+    el.hidden = false;
+    el.classList.remove('is-on');
+    void el.offsetWidth;
+    el.classList.add('is-on');
+    window.clearTimeout(badgeTimer);
+    badgeTimer = window.setTimeout(() => (el.hidden = true), 2400);
+  }
+
+  function curtainCall() {
+    try {
+      if (localStorage.getItem('curtain-call') === 'seen') return;
+      localStorage.setItem('curtain-call', 'seen');
+    } catch {
+      /* storage blocked: show it anyway */
+    }
+    const dialog = document.querySelector<HTMLDialogElement>('[data-curtain-call]');
+    if (!dialog?.showModal) return;
+    document.getElementById('program-panel')?.hidePopover?.();
+    dialog.showModal();
+    sfx('fanfare');
+    const r = dialog.getBoundingClientRect();
+    cardBurst({ x: r.left + r.width / 2, y: r.top + 24 });
+  }
+
+  document.addEventListener('act:seen', (e) => {
+    const id = (e as CustomEvent<ActId>).detail;
+    update(id);
+    sfx('unlock');
+    badge(id);
     // A small bow from the program whenever a new act is ticked off.
     const button = document.querySelector<HTMLElement>('.program-button');
+    document.querySelector('[data-program]')?.classList.remove('is-tucked');
     button?.classList.remove('is-bump');
     void button?.offsetWidth;
     button?.classList.add('is-bump');
+    if (readSeen().size >= total) window.setTimeout(curtainCall, 1600);
   });
-  document.addEventListener('astro:page-load', update);
-  // Close the program when one of its links is followed.
+  document.addEventListener('astro:page-load', () => update());
+
   document.addEventListener('click', (e) => {
-    if (e.target instanceof Element && e.target.closest('.program-panel a')) document.getElementById('program-panel')?.hidePopover?.();
+    const t = e.target instanceof Element ? e.target : null;
+    // Close the program when one of its links is followed.
+    if (t?.closest('.program-panel a')) document.getElementById('program-panel')?.hidePopover?.();
+    if (t?.closest('[data-curtain-close]')) t.closest('dialog')?.close();
   });
+
+  // Tuck the program away while reading down the page, so it never sits on the text. It comes back on the way up and at the end.
+  let lastY = scrollY;
+  addEventListener(
+    'scroll',
+    () => {
+      const program = document.querySelector<HTMLElement>('[data-program]');
+      if (!program) return;
+      const y = scrollY;
+      const atEnd = innerHeight + y >= document.documentElement.scrollHeight - 80;
+      const panelOpen = document.getElementById('program-panel')?.matches(':popover-open');
+      if (Math.abs(y - lastY) < 6) return;
+      program.classList.toggle('is-tucked', y > lastY && y > 160 && !atEnd && !panelOpen);
+      lastY = y;
+    },
+    { passive: true },
+  );
 </script>
 
 <style>
@@ -72,20 +160,30 @@ import { ACTS } from '../lib/acts';
     right: max(16px, env(safe-area-inset-right, 0px));
     bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     z-index: 50;
+    transition: transform 260ms ease;
   }
 
+  .program.is-tucked {
+    transform: translateY(calc(100% + 32px));
+  }
+
+  .program:has(.program-button:focus-visible) {
+    transform: none;
+  }
+
+  /* The HUD: a pixel label, a hand of eight cards, and the score. */
   .program-button {
     display: inline-flex;
     align-items: center;
     gap: 10px;
     min-height: 46px;
-    padding: 8px 18px;
-    border: 1.5px solid var(--line);
-    border-radius: 999px;
+    padding: 8px 14px 8px 16px;
+    border: 2px solid var(--line);
+    border-radius: 6px;
     background: var(--surface);
     color: var(--text);
-    font: 600 15px/1.2 var(--font-body);
-    box-shadow: 0 12px 30px rgba(4, 16, 19, 0.45);
+    font: 400 16px/1 var(--font-game);
+    box-shadow: 4px 4px 0 var(--shadow);
     cursor: pointer;
   }
 
@@ -94,38 +192,157 @@ import { ACTS } from '../lib/acts';
   }
 
   .program-button.is-bump {
-    animation: bump 700ms ease-out;
+    animation: bump 700ms steps(4, end);
   }
 
   @keyframes bump {
     30% {
-      transform: scale(1.08);
-      border-color: var(--brass);
+      transform: translateY(-4px);
+      border-color: var(--marquee);
+    }
+  }
+
+  .program-label {
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pips {
+    display: inline-flex;
+    gap: 3px;
+  }
+
+  .pip {
+    display: grid;
+    place-items: center;
+    width: 14px;
+    height: 19px;
+    border: 1.5px solid var(--line);
+    border-radius: 2px;
+    color: var(--muted);
+    font: 11px/1 var(--font-body);
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease;
+  }
+
+  .pip.is-seen {
+    border-color: var(--card);
+    background: var(--card);
+    color: var(--card-ink);
+  }
+
+  .pip.is-seen.is-red {
+    color: var(--card-red);
+  }
+
+  .pip.is-fresh {
+    border-color: var(--marquee);
+    box-shadow: 0 0 0 2px var(--marquee);
+    animation: deal 420ms steps(3, end);
+  }
+
+  @keyframes deal {
+    from {
+      transform: translateY(-8px) rotate(-12deg);
+    }
+  }
+
+  .program-count {
+    min-width: 3ch;
+    padding: 3px 6px;
+    border-radius: 3px;
+    background: var(--marquee);
+    color: var(--bg);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  /* "Act III ✓": pops up over the program for a moment when an act is ticked off. */
+  .act-badge {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 10px);
+    margin: 0;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background: var(--marquee);
+    color: var(--bg);
+    font: 400 19px/1 var(--font-game);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 4px 4px 0 var(--shadow);
+    pointer-events: none;
+  }
+
+  .act-badge[hidden] {
+    display: none;
+  }
+
+  .program.is-tucked .act-badge {
+    visibility: hidden;
+  }
+
+  .act-badge.is-on {
+    animation: badge 2400ms steps(1, end) both;
+  }
+
+  @keyframes badge {
+    0% {
+      transform: translateY(8px);
+      opacity: 0;
+    }
+    6% {
+      transform: translateY(-4px);
+      opacity: 1;
+    }
+    12%,
+    85% {
+      transform: none;
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
     }
   }
 
   @media (max-width: 720px) {
     .program-button {
-      padding: 8px 14px;
+      gap: 8px;
+      padding: 6px 10px;
     }
 
     .program-label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-      white-space: nowrap;
+      display: none;
+    }
+
+    .pip {
+      width: 12px;
+      height: 17px;
+      font-size: 10px;
     }
   }
 
-  .program-count {
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: var(--brass);
-    color: var(--bg);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
+  /* Small phones: a compact chip, one card and the score, so it covers as little of the page as possible. */
+  @media (max-width: 480px) {
+    .program-button {
+      gap: 6px;
+      min-width: 44px;
+      padding: 6px 8px;
+    }
+
+    .pip:not(:first-child) {
+      display: none;
+    }
+
+    .pip:first-child {
+      border-color: var(--card);
+      background: var(--card);
+      color: var(--card-ink);
+    }
   }
 
   .program-panel {
@@ -138,16 +355,17 @@ import { ACTS } from '../lib/acts';
     border-radius: var(--radius);
     background: var(--bg-deep);
     color: var(--text);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 24px 60px var(--shadow);
   }
 
-  .program-panel::backdrop {
-    background: rgba(4, 16, 19, 0.45);
+  .program-panel::backdrop,
+  .curtain-call::backdrop {
+    background: rgba(4, 16, 19, 0.5);
   }
 
   .program-panel h2 {
-    margin: 0;
-    font-size: 32px;
+    margin: 4px 0 0;
+    font-size: 34px;
   }
 
   .program-intro {
@@ -172,17 +390,29 @@ import { ACTS } from '../lib/acts';
     align-items: start;
   }
 
+  /* Each act is a card in the hand: face down until it's been seen. */
   .tick {
+    display: grid;
+    place-items: center;
     width: 22px;
-    height: 22px;
-    margin-top: 2px;
-    border-radius: 50%;
+    height: 30px;
+    margin-top: 1px;
     border: 1.5px solid var(--line);
+    border-radius: 3px;
+    background: var(--card-back);
+    color: transparent;
+    font-size: 15px;
+    line-height: 1;
   }
 
   .is-seen .tick {
-    border-color: var(--brass);
-    background: var(--brass) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3L15 6.5' fill='none' stroke='%2310292e' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px no-repeat;
+    border-color: var(--card);
+    background: var(--card);
+    color: var(--card-ink);
+  }
+
+  .is-seen .tick.is-red {
+    color: var(--card-red);
   }
 
   .act-text {
@@ -197,6 +427,47 @@ import { ACTS } from '../lib/acts';
   .act-where {
     color: var(--muted);
     font-size: 15px;
+  }
+
+  .curtain-call {
+    width: min(520px, calc(100vw - 32px));
+    padding: 32px 30px 28px;
+    border: 3px solid var(--marquee);
+    border-radius: 6px;
+    background: var(--bg-deep);
+    color: var(--text);
+    box-shadow: 8px 8px 0 var(--shadow);
+  }
+
+  .curtain-call[open] {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    animation: call-in 420ms cubic-bezier(0.2, 1.3, 0.4, 1);
+  }
+
+  .curtain-call .eyebrow {
+    color: var(--marquee);
+  }
+
+  .curtain-call h2 {
+    margin: 0;
+    font-size: clamp(36px, 6vw, 48px);
+  }
+
+  .curtain-call p:not(.eyebrow) {
+    margin: 0;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 20px;
+    line-height: 1.45;
+  }
+
+  @keyframes call-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
   }
 
   :global(body.plain) .program {

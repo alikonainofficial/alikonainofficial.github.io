@@ -41,6 +41,7 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
 <script>
   import { ACTS, markSeen, readSeen } from '../lib/acts';
   import { sfx } from '../lib/audio';
+  import { cardBurst } from '../lib/burst';
   import { arrivedAt, bankDwell, session } from '../lib/client';
   import { duration, strongest, times } from '../lib/tricks';
 
@@ -95,6 +96,10 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
       if (b.classList.contains('btn')) b.textContent = 'Open it again';
     });
     sfx('reveal');
+
+    // The ending is the biggest moment of the show: a burst of cards from the envelope.
+    const envelope = root.querySelector<HTMLElement>('.envelope')?.getBoundingClientRect();
+    if (envelope && envelope.bottom > 0 && envelope.top < innerHeight) cardBurst({ x: envelope.left + envelope.width / 2, y: envelope.top + envelope.height / 2 });
   });
 </script>
 
@@ -107,10 +112,25 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
   }
 
   .envelope-row {
+    position: relative;
+    isolation: isolate;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 24px 36px;
+  }
+
+  /* The finale is lit in coral, the colour of the show's peaks. */
+  .envelope-row::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    left: -80px;
+    top: -120px;
+    width: min(620px, 92vw);
+    height: 360px;
+    pointer-events: none;
+    background: radial-gradient(closest-side, var(--gel-coral), transparent);
   }
 
   .envelope {
@@ -149,8 +169,8 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
     height: 30px;
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    background: var(--card-red);
-    box-shadow: inset 0 0 0 4px #c55a50;
+    background: var(--marquee);
+    box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--marquee) 70%, #ffffff);
     transition:
       transform 400ms ease,
       opacity 400ms ease;
@@ -228,11 +248,10 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
 
   .kicker {
     margin: 0;
-    color: var(--brass);
-    font-weight: 700;
+    color: var(--marquee);
+    font: 700 13px/1.3 var(--font-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    font-size: 14px;
   }
 
   .calls {

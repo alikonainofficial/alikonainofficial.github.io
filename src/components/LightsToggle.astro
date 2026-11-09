@@ -1,0 +1,90 @@
+---
+/**
+ * The house lights: a daylight version of the club for anyone who reads better
+ * on a light page. The choice is remembered in this browser; the inline script
+ * in Base.astro applies it before the first paint.
+ */
+---
+
+<button class="lights" type="button" data-lights-toggle aria-pressed="false" data-sfx="flip">
+  <svg width="20" height="20" viewBox="0 0 10 10" shape-rendering="crispEdges" aria-hidden="true">
+    <!-- A pixel bulb: glass, rays when lit, and the screw base. -->
+    <path class="rays" fill="currentColor" d="M4 0h2v1h-2zM0 4h1v2h-1zM9 4h1v2h-1zM1 1h1v1h-1zM8 1h1v1h-1z"></path>
+    <path class="glass" fill="currentColor" d="M3 2h4v1h1v3h-1v1h-4v-1h-1v-3h1z"></path>
+    <path fill="currentColor" d="M3 8h4v1h-4zM4 9h2v1h-2z"></path>
+  </svg>
+  <span class="visually-hidden" data-lights-label>Bring the house lights up</span>
+</button>
+
+<script>
+  function lightsUp(): boolean {
+    return document.documentElement.dataset.lights === 'up';
+  }
+
+  function sync() {
+    const up = lightsUp();
+    document.querySelectorAll<HTMLButtonElement>('[data-lights-toggle]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(up));
+      const label = b.querySelector('[data-lights-label]');
+      if (label) label.textContent = up ? 'Dim the house lights' : 'Bring the house lights up';
+      b.title = up ? 'Dim the house lights' : 'House lights up';
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!(e.target instanceof Element) || !e.target.closest('[data-lights-toggle]')) return;
+    const up = !lightsUp();
+    if (up) document.documentElement.dataset.lights = 'up';
+    else delete document.documentElement.dataset.lights;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', up ? '#f6f1e7' : '#0e2427');
+    try {
+      localStorage.setItem('house-lights', up ? 'up' : 'down');
+    } catch {
+      /* storage blocked: the choice lasts for this page only */
+    }
+    sync();
+  });
+  document.addEventListener('astro:page-load', sync);
+</script>
+
+<style>
+  .lights {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1.5px solid color-mix(in srgb, var(--text) 50%, transparent);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition:
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .lights:hover {
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  .rays {
+    opacity: 0;
+  }
+
+  @media (max-width: 720px) {
+    .lights {
+      width: 40px;
+      height: 44px;
+    }
+  }
+
+  .lights[aria-pressed='true'] {
+    border-color: var(--brass);
+    color: var(--brass);
+  }
+
+  .lights[aria-pressed='true'] .rays {
+    opacity: 1;
+  }
+</style>

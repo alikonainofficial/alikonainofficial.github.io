@@ -48,4 +48,59 @@
     if (session('magic', false)) document.documentElement.classList.add('is-magic');
     trackDwell();
   });
+
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /** Play a one-off reaction on every avatar on the page. */
+  function react(name: 'is-cheer' | 'is-shrug') {
+    if (reduced()) return;
+    document.querySelectorAll<SVGElement>('[data-avatar]').forEach((a) => {
+      a.classList.remove('is-cheer', 'is-shrug');
+      void a.getBoundingClientRect();
+      a.classList.add(name);
+      window.setTimeout(() => a.classList.remove(name), 800);
+    });
+  }
+  document.addEventListener('act:seen', () => react('is-cheer'));
+  document.addEventListener('host:declined', () => react('is-shrug'));
+
+  // The avatar keeps an eye on you: his eyes follow the pointer left and right.
+  let pending = false;
+  let pointerX = 0;
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    pointerX = e.clientX;
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      pending = false;
+      document.querySelectorAll<SVGElement>('[data-avatar]').forEach((a) => {
+        const r = a.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > innerHeight) return;
+        const centre = r.left + r.width / 2;
+        const look = pointerX < centre - r.width * 0.6 ? -1 : pointerX > centre + r.width * 0.6 ? 1 : 0;
+        a.style.setProperty('--look', String(look));
+      });
+    });
+  });
+
+  // The curtain closes while the next page loads, then opens on it.
+  const curtain = () => document.querySelector<HTMLElement>('[data-curtain]');
+  let curtainFallback: number | undefined;
+  document.addEventListener('astro:before-preparation', (e) => {
+    const c = curtain();
+    if (!c || reduced() || e.to.pathname === e.from.pathname) return;
+    const load = e.loader;
+    e.loader = async () => {
+      c.classList.add('is-closed');
+      sfx('whoosh');
+      await Promise.all([load(), new Promise((r) => setTimeout(r, 280))]);
+    };
+    window.clearTimeout(curtainFallback);
+    curtainFallback = window.setTimeout(() => curtain()?.classList.remove('is-closed'), 4000);
+  });
+  document.addEventListener('astro:page-load', () => {
+    window.clearTimeout(curtainFallback);
+    requestAnimationFrame(() => requestAnimationFrame(() => curtain()?.classList.remove('is-closed')));
+  });
 </script>

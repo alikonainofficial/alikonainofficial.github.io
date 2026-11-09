@@ -1,5 +1,5 @@
 ---
-import { ali, hat, spritePaths } from '../lib/sprite';
+import { EYE_ROWS, WAIST_ROW, ali, eyes, hat, lids, rows, spritePaths, withoutEyes } from '../lib/sprite';
 
 interface Props {
   /** Screen pixels per sprite pixel. */
@@ -9,7 +9,14 @@ interface Props {
 }
 
 const { scale = 8, label = 'Pixel-art Ali', class: className } = Astro.props;
-const body = spritePaths(ali);
+
+// Layers, so Ali can breathe, blink and look around: the legs stay planted while
+// everything above the waist bobs, and the eyes sit on top of a blank face.
+const face = withoutEyes(ali);
+const upper = spritePaths(rows(face, 0, WAIST_ROW));
+const legs = spritePaths(rows(face, WAIST_ROW, ali.height));
+const openEyes = spritePaths(eyes, EYE_ROWS[0]);
+const shut = spritePaths(lids, EYE_ROWS[0]);
 // The hat lives in the seven rows above the head and only shows once the secret word is found.
 const topHat = spritePaths(hat, -hat.height);
 const top = hat.height;
@@ -26,14 +33,59 @@ const top = hat.height;
   aria-label={label || undefined}
   aria-hidden={label ? undefined : 'true'}
 >
-  <g class="avatar-hat">{topHat.map(({ fill, d }) => <path fill={fill} d={d} />)}</g>
-  {body.map(({ fill, d }) => <path fill={fill} d={d} />)}
+  <g class="avatar-legs">{legs.map(({ fill, d }) => <path fill={fill} d={d} />)}</g>
+  <g class="avatar-upper">
+    <g class="avatar-hat">{topHat.map(({ fill, d }) => <path fill={fill} d={d} />)}</g>
+    {upper.map(({ fill, d }) => <path fill={fill} d={d} />)}
+    <g class="avatar-eyes">{openEyes.map(({ fill, d }) => <path fill={fill} d={d} />)}</g>
+    <g class="avatar-lids">{shut.map(({ fill, d }) => <path fill={fill} d={d} />)}</g>
+  </g>
 </svg>
 
 <style>
+  /* Idle: a one-pixel breath, in two frames like a handheld RPG. */
+  .avatar-upper {
+    animation: idle 1.4s steps(1, end) infinite;
+  }
+
+  @keyframes idle {
+    0%,
+    100% {
+      transform: none;
+    }
+    50% {
+      transform: translateY(1px);
+    }
+  }
+
+  /* Blink every few seconds. Ends open, so reduced motion leaves the eyes open. */
+  .avatar-lids {
+    opacity: 0;
+    animation: blink 4.6s steps(1, end) infinite;
+  }
+
+  @keyframes blink {
+    0%,
+    93%,
+    100% {
+      opacity: 0;
+    }
+    94%,
+    97% {
+      opacity: 1;
+    }
+  }
+
+  /* Glance: the page sets --look to -1, 0 or 1 as the pointer moves. */
+  .avatar-eyes {
+    transform: translateX(calc(var(--look, 0) * 1px));
+  }
+
   .avatar-hat {
     opacity: 0;
     transform: translateY(-4px);
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
     transition:
       opacity 300ms ease,
       transform 300ms ease;
@@ -42,5 +94,58 @@ const top = hat.height;
   :global(.is-magic) .avatar-hat {
     opacity: 1;
     transform: none;
+  }
+
+  /* A trick landed: a two-frame hop, and the hat comes off for a moment if he's wearing it. */
+  .avatar:global(.is-cheer) .avatar-upper {
+    animation: cheer 720ms steps(1, end);
+  }
+
+  @keyframes cheer {
+    0%,
+    100% {
+      transform: none;
+    }
+    20%,
+    60% {
+      transform: translateY(-2px);
+    }
+    40% {
+      transform: translateY(-1px);
+    }
+  }
+
+  :global(.is-magic) .avatar:global(.is-cheer) .avatar-hat {
+    animation: tip 720ms steps(1, end);
+  }
+
+  @keyframes tip {
+    20%,
+    60% {
+      transform: translate(-1px, -2px) rotate(-12deg);
+    }
+  }
+
+  /* "Not now": a shrug. Shoulders up, a tilt each way, and back to idle. */
+  .avatar:global(.is-shrug) .avatar-upper {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: shrug 760ms steps(1, end);
+  }
+
+  @keyframes shrug {
+    0%,
+    100% {
+      transform: none;
+    }
+    20% {
+      transform: translateY(-1px);
+    }
+    45% {
+      transform: translateY(-1px) rotate(-4deg);
+    }
+    70% {
+      transform: translateY(-1px) rotate(4deg);
+    }
   }
 </style>

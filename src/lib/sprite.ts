@@ -95,6 +95,41 @@ export const hat: Sprite = {
   },
 };
 
+/** Rows 12 and 13 hold Ali's eyes. The avatar draws them as their own layer so they can blink and glance. */
+export const EYE_ROWS = [12, 13] as const;
+
+/** Where the shoulders start: everything above breathes, the legs stay planted. */
+export const WAIST_ROW = 22;
+
+/** The open eyes, on their own: dark irises with a shine in the top corner. */
+export const eyes: Sprite = {
+  width: 20,
+  height: 2,
+  grid: ['......EW....EW......', '......EE....EE......'],
+  palette: { E: ali.palette.E!, W: ali.palette.W! },
+};
+
+/** The eyes shut: skin over the top row and a dark lash line under it. */
+export const lids: Sprite = {
+  width: 20,
+  height: 2,
+  grid: ['......SS....SS......', '......EE....EE......'],
+  palette: { S: ali.palette.S!, E: ali.palette.E! },
+};
+
+/** A copy of a sprite keeping only rows from..to (end exclusive); the rest turn transparent. */
+export function rows(sprite: Sprite, from: number, to: number): Sprite {
+  return { ...sprite, grid: sprite.grid.map((row, y) => (y >= from && y < to ? row : '.'.repeat(sprite.width))) };
+}
+
+/** A copy of a sprite with the eye cells painted over in skin, so the eye layer can move on top. */
+export function withoutEyes(sprite: Sprite): Sprite {
+  return {
+    ...sprite,
+    grid: sprite.grid.map((row, y) => ((EYE_ROWS as readonly number[]).includes(y) ? row.replace(/[EW]/g, 'S') : row)),
+  };
+}
+
 /** Turn a sprite into one path per colour. Transparent cells are '.'. offsetY shifts every row. */
 export function spritePaths(sprite: Sprite, offsetY = 0): SpritePath[] {
   const byColour = new Map<string, string[]>();

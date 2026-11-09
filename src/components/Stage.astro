@@ -6,11 +6,10 @@ import { person } from '../lib/profile';
 import { TAGLINES } from '../lib/cold-read';
 ---
 
-<section id="top" class="hero wrap" aria-labelledby="hero-title" data-dwell="the cold read">
-  <div class="hero-copy">
+<section id="top" class="hero wrap" aria-labelledby="hero-title" data-dwell="the cold read" data-hero>
+  <div class="intro">
     <h1 id="hero-title" class="display">{person.name}</h1>
     <p class="tagline" data-tagline>{TAGLINES.fullstack}</p>
-    <ColdRead />
   </div>
 
   <div class="spotlight">
@@ -23,23 +22,85 @@ import { TAGLINES } from '../lib/cold-read';
     </div>
     <HostInvite />
   </div>
+
+  <div class="reading">
+    <ColdRead />
+  </div>
 </section>
+
+<script>
+  // The spotlight follows you: on a desktop, the hero's light drifts toward the pointer.
+  let target = { x: 0.7, y: 0.4 };
+  let current = { ...target };
+  let raf = 0;
+
+  function step() {
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    if (!hero) {
+      raf = 0;
+      return;
+    }
+    current.x += (target.x - current.x) * 0.12;
+    current.y += (target.y - current.y) * 0.12;
+    hero.style.setProperty('--mx', `${(current.x * 100).toFixed(2)}%`);
+    hero.style.setProperty('--my', `${(current.y * 100).toFixed(2)}%`);
+    raf = Math.abs(target.x - current.x) + Math.abs(target.y - current.y) > 0.001 ? requestAnimationFrame(step) : 0;
+  }
+
+  document.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse' || !matchMedia('(pointer: fine) and (prefers-reduced-motion: no-preference)').matches) return;
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    if (!hero) return;
+    const r = hero.getBoundingClientRect();
+    if (e.clientY < r.top || e.clientY > r.bottom) return;
+    hero.classList.add('is-following');
+    target = { x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height };
+    if (!raf) raf = requestAnimationFrame(step);
+  });
+</script>
 
 <style>
   .hero {
-    display: flex;
-    flex-wrap: wrap;
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 400px);
+    grid-template-areas:
+      'intro spot'
+      'reading spot';
     align-items: center;
-    gap: 48px 56px;
+    gap: 22px 56px;
     padding-block: 40px 96px;
   }
 
-  .hero-copy {
-    flex: 1 1 560px;
-    min-width: 0;
+  /* The spotlight that follows the pointer. Off for touch and reduced motion; it only appears once the mouse moves. */
+  .hero::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -40px 0 0;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(420px circle at var(--mx, 70%) var(--my, 40%), var(--gel-amber), transparent 70%);
+    transition: opacity 600ms ease;
+  }
+
+  .hero:global(.is-following)::before {
+    opacity: 1;
+  }
+
+  .intro {
+    grid-area: intro;
+    align-self: end;
     display: flex;
     flex-direction: column;
     gap: 22px;
+  }
+
+  .reading {
+    grid-area: reading;
+    align-self: start;
+    min-width: 0;
   }
 
   h1 {
@@ -57,10 +118,9 @@ import { TAGLINES } from '../lib/cold-read';
   }
 
   .spotlight {
+    grid-area: spot;
     position: relative;
-    flex: 1 1 340px;
-    max-width: 400px;
-    margin-inline: auto;
+    width: 100%;
   }
 
   .stage-light {
@@ -76,7 +136,7 @@ import { TAGLINES } from '../lib/cold-read';
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: radial-gradient(circle at 50% 42%, rgba(217, 179, 108, 0.38), rgba(217, 179, 108, 0.08) 55%, rgba(217, 179, 108, 0) 70%);
+    background: radial-gradient(circle at 50% 42%, var(--spot), color-mix(in srgb, var(--spot) 22%, transparent) 55%, transparent 70%);
     animation: breathe 6s ease-in-out infinite;
   }
 
@@ -101,33 +161,59 @@ import { TAGLINES } from '../lib/cold-read';
     }
   }
 
-  @media (max-width: 720px) {
+  @media (max-width: 860px) {
     .hero {
-      gap: 8px;
-      padding-block: 4px 56px;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'intro'
+        'spot'
+        'reading';
     }
 
     .spotlight {
-      order: -1;
-      flex: 1 1 100%;
+      max-width: 400px;
+      margin-inline: auto;
+    }
+  }
+
+  /* Phones: name first, then the host beside his question, then the reading. */
+  @media (max-width: 720px) {
+    .hero {
+      gap: 14px;
+      padding-block: 12px 56px;
+    }
+
+    .intro {
+      gap: 12px;
+    }
+
+    .spotlight {
       max-width: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .stage-light {
-      width: 190px;
-      margin-inline: auto;
-      padding-bottom: 22px;
+      flex: 0 0 112px;
+      width: 112px;
+      padding-bottom: 14px;
     }
 
     .stage-light :global(svg) {
-      width: 84px;
+      width: 64px;
       height: auto;
     }
 
     .podium {
-      bottom: 16px;
-      width: 120px;
-      height: 20px;
+      bottom: 8px;
+      width: 84px;
+      height: 16px;
+    }
+
+    /* Without the invite, the host stands alone in the middle. */
+    .spotlight:has(:global([data-host-invite][hidden])) {
+      justify-content: center;
     }
   }
 </style>
