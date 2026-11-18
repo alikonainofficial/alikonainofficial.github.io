@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-  cityFromTimeZone,
+  countryName,
   classifyReferrer,
   cleanCompany,
   coldRead,
   joinClauses,
   parseOS,
   parseRole,
+  placeFromTimeZone,
   type Signals,
 } from './cold-read';
 
@@ -55,11 +56,34 @@ describe('small readers', () => {
     expect(cleanCompany('<>')).toBeNull();
   });
 
-  it('turns time zones into cities', () => {
-    expect(cityFromTimeZone('Europe/Amsterdam')).toBe('Amsterdam');
-    expect(cityFromTimeZone('America/Argentina/Buenos_Aires')).toBe('Buenos Aires');
-    expect(cityFromTimeZone('UTC')).toBeNull();
-    expect(cityFromTimeZone('Etc/GMT+5')).toBeNull();
+  it('turns time zones into countries', () => {
+    expect(placeFromTimeZone('Europe/Amsterdam')).toBe('the Netherlands');
+    expect(placeFromTimeZone('Asia/Karachi')).toBe('Pakistan');
+    expect(placeFromTimeZone('America/Argentina/Buenos_Aires')).toBe('Argentina');
+    expect(placeFromTimeZone('UTC')).toBeNull();
+    expect(placeFromTimeZone('Etc/GMT+5')).toBeNull();
+    expect(placeFromTimeZone('Not/A_Zone')).toBeNull();
+  });
+
+  it('knows the old names some browsers still report', () => {
+    expect(placeFromTimeZone('Asia/Calcutta')).toBe('India');
+    expect(placeFromTimeZone('Europe/Kiev')).toBe('Ukraine');
+    expect(placeFromTimeZone('US/Eastern')).toBe('the United States');
+  });
+
+  it('names the state only where one zone covers exactly one', () => {
+    expect(placeFromTimeZone('America/Phoenix')).toBe('Arizona');
+    expect(placeFromTimeZone('Australia/Brisbane')).toBe('Queensland');
+    expect(placeFromTimeZone('America/New_York')).toBe('the United States');
+    expect(placeFromTimeZone('Australia/Sydney')).toBe('Australia');
+  });
+
+  it('names countries the way a sentence wants them', () => {
+    expect(countryName('GB')).toBe('the United Kingdom');
+    expect(countryName('KY')).toBe('the Cayman Islands');
+    expect(countryName('TT')).toBe('Trinidad and Tobago');
+    expect(countryName('HK')).toBe('Hong Kong');
+    expect(countryName('DE')).toBe('Germany');
   });
 
   it('reads the operating system from the user agent', () => {
@@ -82,7 +106,7 @@ describe('coldRead', () => {
   it('reads an evening LinkedIn visit on a Mac in dark mode', () => {
     const r = coldRead({ ...base, referrer: 'https://www.linkedin.com/feed/', os: 'mac', prefersDark: true });
     expect(r.guess).toBe(
-      "Let me guess. You're in Amsterdam, or somewhere on Amsterdam time, and it's evening. You came here from LinkedIn, and you're on a Mac with dark mode on.",
+      "Let me guess. You're somewhere in the Netherlands, and it's evening. You came here from LinkedIn, and you're on a Mac with dark mode on.",
     );
     expect(r.aside).toBe("Don't look so surprised. That was only the warm-up.");
   });

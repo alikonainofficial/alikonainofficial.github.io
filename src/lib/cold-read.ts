@@ -11,6 +11,8 @@
  * apart from a visit counter that stays in the visitor's own localStorage.
  */
 
+import { countryOfTimeZone } from './time-zones';
+
 export type Role = 'fullstack' | 'ai' | 'fde';
 export type OS = 'mac' | 'windows' | 'iphone' | 'ipad' | 'android' | 'linux' | 'chromeos';
 
@@ -120,12 +122,88 @@ export function cleanCompany(value: string | null | undefined): string | null {
   return cleaned.length > 0 ? cleaned : null;
 }
 
-/** "Europe/Amsterdam" becomes "Amsterdam"; zones that aren't places (UTC, Etc/GMT+5) give null. */
-export function cityFromTimeZone(tz: string): string | null {
-  if (!tz || !tz.includes('/') || tz.startsWith('Etc/')) return null;
-  const last = tz.split('/').pop() ?? '';
-  const city = last.replace(/_/g, ' ').trim();
-  return city.length > 0 ? city : null;
+/**
+ * A time zone names a city, but it rarely tells you the visitor's city: every clock in
+ * Pakistan says Asia/Karachi, and America/New_York covers half the United States. The
+ * country is almost always right, so that's what the read names.
+ *
+ * A few zones cover exactly one state or province (or one set of islands), and Windows
+ * doesn't fold them into a neighbour, so those get the sharper read.
+ */
+const REGIONS: Record<string, string> = {
+  'America/Phoenix': 'Arizona',
+  'US/Arizona': 'Arizona',
+  'Pacific/Honolulu': 'Hawaii',
+  'US/Hawaii': 'Hawaii',
+  'America/Anchorage': 'Alaska',
+  'America/Juneau': 'Alaska',
+  'America/Sitka': 'Alaska',
+  'America/Yakutat': 'Alaska',
+  'America/Nome': 'Alaska',
+  'America/Metlakatla': 'Alaska',
+  'America/Adak': 'Alaska',
+  'America/Atka': 'Alaska',
+  'US/Alaska': 'Alaska',
+  'US/Aleutian': 'Alaska',
+  'Australia/Brisbane': 'Queensland',
+  'Australia/Lindeman': 'Queensland',
+  'Australia/Queensland': 'Queensland',
+  'Australia/Perth': 'Western Australia',
+  'Australia/West': 'Western Australia',
+  'Australia/Hobart': 'Tasmania',
+  'Australia/Currie': 'Tasmania',
+  'Australia/Tasmania': 'Tasmania',
+  'Australia/Darwin': 'the Northern Territory',
+  'Australia/North': 'the Northern Territory',
+  'America/Regina': 'Saskatchewan',
+  'America/Swift_Current': 'Saskatchewan',
+  'Canada/Saskatchewan': 'Saskatchewan',
+  'America/St_Johns': 'Newfoundland and Labrador',
+  'Canada/Newfoundland': 'Newfoundland and Labrador',
+  'Atlantic/Canary': 'the Canary Islands',
+  'Atlantic/Madeira': 'Madeira',
+  'Atlantic/Azores': 'the Azores',
+  'Pacific/Galapagos': 'the Galápagos Islands',
+  'Pacific/Easter': 'Easter Island',
+  'Chile/EasterIsland': 'Easter Island',
+  'Pacific/Chatham': 'the Chatham Islands',
+  'NZ-CHAT': 'the Chatham Islands',
+};
+
+/** Where the browser's region names read awkwardly in a sentence. */
+const COUNTRY_NAMES: Record<string, string> = {
+  CD: 'the Democratic Republic of the Congo',
+  CG: 'the Republic of the Congo',
+  HK: 'Hong Kong',
+  MM: 'Myanmar',
+  MO: 'Macau',
+  VA: 'Vatican City',
+};
+
+/** Names that take "the": the United States, the Netherlands, the Cayman Islands. */
+const TAKES_THE =
+  /^(United |U\.S\. |British |Caribbean |Central African |Dominican |Czech |Isle of |French Southern |Palestinian )|(Islands|Netherlands|Philippines|Bahamas|Gambia|Maldives|Comoros|Seychelles|Emirates)$/;
+
+/** "PK" becomes "Pakistan", "US" becomes "the United States". Null when the browser can't name it. */
+export function countryName(code: string): string | null {
+  if (COUNTRY_NAMES[code]) return COUNTRY_NAMES[code];
+  let name: string | undefined;
+  try {
+    name = new Intl.DisplayNames(['en'], { type: 'region' }).of(code);
+  } catch {
+    return null;
+  }
+  if (!name || name === code) return null;
+  name = name.replace(/ & /g, ' and ');
+  return TAKES_THE.test(name) ? `the ${name}` : name;
+}
+
+/** "Asia/Karachi" becomes "Pakistan", "America/Phoenix" becomes "Arizona"; zones that aren't places (UTC, Etc/GMT+5) give null. */
+export function placeFromTimeZone(tz: string): string | null {
+  if (!tz) return null;
+  if (REGIONS[tz]) return REGIONS[tz];
+  const code = countryOfTimeZone(tz);
+  return code ? countryName(code) : null;
 }
 
 /** Best-effort OS from the user agent (and the newer platform hint when the browser offers it). */
@@ -211,7 +289,7 @@ export function coldRead(signals: Signals): Reading {
   const role = parseRole(params.get('for'));
   const company = cleanCompany(params.get('co'));
   const source = classifyReferrer(signals.referrer);
-  const city = cityFromTimeZone(signals.timeZone);
+  const where = placeFromTimeZone(signals.timeZone);
   const weekend = signals.weekday === 0 || signals.weekday === 6;
   const day = DAYS[signals.weekday] ?? 'today';
 
@@ -219,7 +297,7 @@ export function coldRead(signals: Signals): Reading {
 
   // Where and when.
   const when = `it's ${timeOfDay(signals.hour)}${weekend ? ` on a ${day}` : ''}`;
-  const place = city ? `You're in ${city}, or somewhere on ${city} time, and ${when}` : `${cap(when)} where you are`;
+  const place = where ? `You're somewhere in ${where}, and ${when}` : `${cap(when)} where you are`;
 
   if (company) {
     sentences.push(`You're at ${company}, and you opened the link I sent with my application`);
