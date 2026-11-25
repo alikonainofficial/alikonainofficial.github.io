@@ -8,7 +8,7 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
 ---
 
 <section id="finale" class="finale wrap" aria-labelledby="finale-title" data-finale data-labels={JSON.stringify(labels)}>
-  <div class="envelope-row">
+  <div class="envelope-row" data-rise>
     <button class="envelope" type="button" data-open aria-describedby="sealed-at" data-sfx="none">
       <span class="flap" aria-hidden="true"></span>
       <span class="seal" aria-hidden="true"></span>
@@ -27,7 +27,7 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
     <p class="progress" data-progress></p>
   </div>
 
-  <div class="contact">
+  <div class="contact" data-rise>
     <p class="display contact-line">For my last trick, I'll predict what you do next: you'll get in touch.</p>
     <div class="btn-row">
       <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>

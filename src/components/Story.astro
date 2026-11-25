@@ -6,14 +6,14 @@ const { years } = timeInProduction();
 
 <section id="story" class="story wrap" aria-labelledby="story-title" data-dwell="my story">
   <div class="setlist">
-    <div class="section-head gel-magenta">
+    <div class="section-head gel-magenta" data-rise>
       <h2 id="story-title" class="display">The set list</h2>
       <p>{years}+ years in production, most recent first.</p>
     </div>
     <ol class="sets">
       {
         acts.map((act) => (
-          <li class="set">
+          <li class="set" data-rise>
             <span class="dates">
               {act.start} to {act.end}
             </span>
@@ -27,7 +27,7 @@ const { years } = timeInProduction();
         ))
       }
     </ol>
-    <p class="education">
+    <p class="education" data-rise>
       Studied at {
         education.map((e, i) => (
           <>

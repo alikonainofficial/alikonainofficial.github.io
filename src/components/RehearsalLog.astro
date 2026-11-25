@@ -21,7 +21,7 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 ---
 
 <section id="rehearsal" class="rehearsal wrap" aria-labelledby="rehearsal-title" data-dwell="the rehearsal log">
-  <div class="section-head gel-amber">
+  <div class="section-head gel-amber" data-rise>
     <div>
       <p class="eyebrow">Backstage</p>
       <h2 id="rehearsal-title" class="display">The rehearsal log</h2>
@@ -29,7 +29,7 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
     <p>A trick only looks easy after the hundredth run-through. This is where I run through algorithms, on LeetCode.</p>
   </div>
 
-  <div class="log panel">
+  <div class="log panel" data-rise>
     <div class="tally">
       <p class="big"><span class="num">{solved.all}</span> problems solved</p>
       <p class="share">{hardShare(solved)}% of them Medium or Hard</p>

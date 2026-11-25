@@ -6,15 +6,15 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
 ---
 
 <section id="work" class="work wrap" aria-labelledby="work-title">
-  <div class="section-head gel-amber">
+  <div class="section-head gel-amber" data-rise>
     <h2 id="work-title" class="display">The work</h2>
     <p>Four case files. Take your time choosing. I'll be watching which one you keep coming back to.</p>
   </div>
 
   <ul class="cards">
     {
-      work.map((entry) => (
-        <li class="card panel" data-card={entry.id} data-dwell={entry.data.label}>
+      work.map((entry, i) => (
+        <li class="card panel" data-card={entry.id} data-dwell={entry.data.label} data-rise style={`--rise-i:${i % 2}`}>
           <Image
             src={entry.data.cover}
             alt={entry.data.coverAlt}

@@ -45,18 +45,18 @@ const first = games[0]!;
       <span data-clock></span>
     </div>
 
-    <div class="intro">
+    <div class="intro" data-rise>
       <p class="kicker">Top five, in order</p>
       <h2 id="player-one-title" class="display">Player One's shelf</h2>
       <p class="lede">The ones I'd take to a desert island, if it had a socket. Pick one.</p>
     </div>
 
-    <div class="now" aria-live="polite">
+    <div class="now" aria-live="polite" data-rise>
       <p class="rank" data-rank>No. 1 of 5</p>
       <p class="title" data-title>{first.title}</p>
     </div>
 
-    <ol class="tiles" aria-label="My top five games, in order">
+    <ol class="tiles" data-rise aria-label="My top five games, in order">
       {
         games.map((g, i) => {
           const img = imageFor(g.slug);

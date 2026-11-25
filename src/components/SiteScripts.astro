@@ -84,6 +84,26 @@
     });
   });
 
+  // Scene changes for browsers without scroll-driven animation: reveal each [data-rise] once as it
+  // comes into view. Where the browser has view timelines, global.css does it from the scroll itself.
+  const scrollDriven = CSS.supports('animation-timeline: view()');
+  const riser = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add('is-risen');
+        riser.unobserve(e.target);
+      }
+    },
+    { rootMargin: '0px 0px -12% 0px' },
+  );
+  document.addEventListener('astro:page-load', () => {
+    riser.disconnect();
+    const on = !scrollDriven && !reduced();
+    document.documentElement.classList.toggle('rise-js', on);
+    if (on) document.querySelectorAll('[data-rise]').forEach((el) => riser.observe(el));
+  });
+
   // The curtain closes while the next page loads, then opens on it.
   const curtain = () => document.querySelector<HTMLElement>('[data-curtain]');
   let curtainFallback: number | undefined;

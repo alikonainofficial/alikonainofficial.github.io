@@ -7,7 +7,7 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
 
 <section id="engineer" class="engineer" aria-labelledby="engineer-title" data-dwell="the engineer's trick">
   <div class="wrap inner" data-engineer>
-    <div class="section-head gel-cyan">
+    <div class="section-head gel-cyan" data-rise>
       <h2 id="engineer-title" class="display">Think of a number from 1 to 63.</h2>
       <p>Keep it to yourself. Tick every card your number appears on, and I'll tell you what it is.</p>
     </div>
@@ -16,7 +16,7 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
       <legend class="visually-hidden">Which cards is your number on?</legend>
       {
         cards.map((c) => (
-          <label class="bcard">
+          <label class="bcard" data-rise style={`--rise-i:${c.bit}`}>
             <input class="visually-hidden" type="checkbox" value={c.bit} data-bit />
             <span class="bcard-head">
               <span class="bcard-name">Card {c.letter}</span>
@@ -32,7 +32,7 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
       }
     </fieldset>
 
-    <div class="controls">
+    <div class="controls" data-rise>
       <button class="btn btn--brass" type="button" data-read data-sfx="none">Read my mind</button>
       <button class="btn btn--line" type="button" data-again hidden>Try another number</button>
     </div>
