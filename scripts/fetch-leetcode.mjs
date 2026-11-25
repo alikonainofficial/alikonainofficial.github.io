@@ -7,6 +7,9 @@
  * third-party requests anyway. If the fetch fails or the answer looks wrong,
  * the last committed snapshot stays in place and the build carries on.
  *
+ * Only totals and the activity calendar are kept: which problems were solved,
+ * and when, stays on LeetCode.
+ *
  *   node scripts/fetch-leetcode.mjs [username]
  */
 import { readFile, writeFile } from 'node:fs/promises';
@@ -19,13 +22,7 @@ const QUERY = `query rehearsal($u: String!) {
     username
     submitStatsGlobal { acSubmissionNum { difficulty count } }
     userCalendar { submissionCalendar }
-    tagProblemCounts {
-      advanced { tagName problemsSolved }
-      intermediate { tagName problemsSolved }
-      fundamental { tagName problemsSolved }
-    }
   }
-  recentAcSubmissionList(username: $u, limit: 15) { title titleSlug timestamp }
 }`;
 
 async function fetchOnce() {
@@ -61,24 +58,12 @@ function shape(data) {
   if (!user) throw new Error(`No LeetCode user called ${USERNAME}`);
   const solved = Object.fromEntries(user.submitStatsGlobal.acSubmissionNum.map((d) => [d.difficulty.toLowerCase(), d.count]));
   const calendar = JSON.parse(user.userCalendar?.submissionCalendar || '{}');
-  const tags = [...user.tagProblemCounts.fundamental, ...user.tagProblemCounts.intermediate, ...user.tagProblemCounts.advanced]
-    .filter((t) => t.problemsSolved > 0)
-    .sort((a, b) => b.problemsSolved - a.problemsSolved)
-    .map((t) => ({ name: t.tagName, solved: t.problemsSolved }));
-  // The recent list repeats a problem for every accepted submission; keep the latest of each.
-  const seen = new Set();
-  const recent = data.recentAcSubmissionList
-    .filter((s) => (seen.has(s.titleSlug) ? false : seen.add(s.titleSlug)))
-    .slice(0, 5)
-    .map((s) => ({ title: s.title, slug: s.titleSlug, at: Number(s.timestamp) }));
 
   return {
     username: user.username,
     fetchedAt: new Date().toISOString(),
     solved: { all: solved.all ?? 0, easy: solved.easy ?? 0, medium: solved.medium ?? 0, hard: solved.hard ?? 0 },
     calendar,
-    tags,
-    recent,
   };
 }
 

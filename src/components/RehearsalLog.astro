@@ -17,7 +17,6 @@ const levels = [
   { key: 'medium', label: 'Medium', n: solved.medium },
   { key: 'hard', label: 'Hard', n: solved.hard },
 ] as const;
-const topics = data.tags.slice(0, 6);
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 ---
 
@@ -75,32 +74,6 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
       </div>
     </figure>
 
-    <div class="recent">
-      <h3 class="eyebrow">Latest run-throughs</h3>
-      <ol>
-        {
-          data.recent.map((r) => (
-            <li>
-              <NewTabLink href={`https://leetcode.com/problems/${r.slug}/`}>{r.title}</NewTabLink>
-              <span class="when">{shortDate(r.at)}</span>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
-
-    <div class="topics">
-      <h3 class="eyebrow">Most rehearsed</h3>
-      <ul class="chips">
-        {
-          topics.map((t) => (
-            <li>
-              {t.name} <span class="n">{t.solved}</span>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
 
     <p class="foot">
       Updated {shortDate(updated)}, every day. <NewTabLink href={profile}>{data.username} on LeetCode</NewTabLink>
@@ -118,7 +91,6 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
     grid-template-areas:
       'tally calendar'
-      'recent topics'
       'foot foot';
     gap: 28px 48px;
     padding: 28px 32px;
@@ -132,14 +104,6 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
     grid-area: calendar;
     margin: 0;
     min-width: 0;
-  }
-
-  .recent {
-    grid-area: recent;
-  }
-
-  .topics {
-    grid-area: topics;
   }
 
   .foot {
@@ -311,41 +275,10 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
     color: var(--muted);
   }
 
-  h3.eyebrow {
-    margin-bottom: 10px;
-  }
-
-  .recent ol {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .recent li {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    padding-block: 6px;
-    border-bottom: 1px dashed var(--line);
-    font-size: 16px;
-  }
-
-  .when {
-    flex: none;
-    color: var(--muted);
-    font-size: 14px;
-  }
-
-  .topics .n {
-    margin-left: 4px;
-    color: var(--brass);
-    font-weight: 700;
-  }
-
   @media (max-width: 860px) {
     .log {
       grid-template-columns: minmax(0, 1fr);
-      grid-template-areas: 'tally' 'calendar' 'recent' 'topics' 'foot';
+      grid-template-areas: 'tally' 'calendar' 'foot';
       padding: 22px 18px;
     }
   }
