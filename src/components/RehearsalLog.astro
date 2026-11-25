@@ -1,0 +1,352 @@
+---
+/**
+ * The rehearsal log: Ali's LeetCode practice, framed as a magician's rehearsal.
+ * Built from the daily snapshot, so it ships no script and makes no request.
+ */
+import NewTabLink from './NewTabLink.astro';
+import snapshot from '../data/leetcode.json';
+import { hardShare, practice, shortDate, type Snapshot } from '../lib/leetcode';
+
+const data = snapshot as Snapshot;
+const updated = new Date(data.fetchedAt);
+const p = practice(data.calendar, updated);
+const { solved } = data;
+const profile = `https://leetcode.com/u/${data.username}/`;
+const levels = [
+  { key: 'easy', label: 'Easy', n: solved.easy },
+  { key: 'medium', label: 'Medium', n: solved.medium },
+  { key: 'hard', label: 'Hard', n: solved.hard },
+] as const;
+const topics = data.tags.slice(0, 6);
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+---
+
+<section id="rehearsal" class="rehearsal wrap" aria-labelledby="rehearsal-title" data-dwell="the rehearsal log">
+  <div class="section-head gel-amber">
+    <div>
+      <p class="eyebrow">Backstage</p>
+      <h2 id="rehearsal-title" class="display">The rehearsal log</h2>
+    </div>
+    <p>A trick only looks easy after the hundredth run-through. This is where I run through algorithms, on LeetCode.</p>
+  </div>
+
+  <div class="log panel">
+    <div class="tally">
+      <p class="big"><span class="num">{solved.all}</span> problems solved</p>
+      <p class="share">{hardShare(solved)}% of them Medium or Hard</p>
+
+      <div class="mix" role="img" aria-label={levels.map((l) => `${l.label} ${l.n}`).join(', ')}>
+        {levels.map((l) => <span class={`seg seg--${l.key}`} style={`flex-grow:${l.n}`} />)}
+      </div>
+      <ul class="legend" aria-hidden="true">
+        {
+          levels.map((l) => (
+            <li>
+              <span class={`dot seg--${l.key}`} />
+              {l.label} <strong>{l.n}</strong>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <figure class="calendar">
+      <figcaption>
+        Active on <strong>{p.activeDays}</strong> of the last {p.spanDays} days, since {shortDate(p.since)}. Longest run: {plural(p.longestRun, 'day')}.
+      </figcaption>
+      <div class="cal-scroll">
+        <div class="cal" style={`--weeks:${p.weeks.length}`}>
+          <div class="months" aria-hidden="true">
+            {p.months.map((m) => <span style={`grid-column:${m.week + 1}`}>{m.label}</span>)}
+          </div>
+          <div class="cells" aria-hidden="true">
+            {
+              p.weeks.map((week) =>
+                week.map((d) =>
+                  d ? <span class={`cell l${d.level}`} title={`${plural(d.count, 'problem')} on ${shortDate(d.date)}`} /> : <span class="cell empty" />,
+                ),
+              )
+            }
+          </div>
+        </div>
+      </div>
+      <div class="scale" aria-hidden="true">
+        Less {[0, 1, 2, 3, 4].map((l) => <span class={`cell l${l}`} />)} More
+      </div>
+    </figure>
+
+    <div class="recent">
+      <h3 class="eyebrow">Latest run-throughs</h3>
+      <ol>
+        {
+          data.recent.map((r) => (
+            <li>
+              <NewTabLink href={`https://leetcode.com/problems/${r.slug}/`}>{r.title}</NewTabLink>
+              <span class="when">{shortDate(r.at)}</span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <div class="topics">
+      <h3 class="eyebrow">Most rehearsed</h3>
+      <ul class="chips">
+        {
+          topics.map((t) => (
+            <li>
+              {t.name} <span class="n">{t.solved}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+
+    <p class="foot">
+      Updated {shortDate(updated)}, every day. <NewTabLink href={profile}>{data.username} on LeetCode</NewTabLink>
+    </p>
+  </div>
+</section>
+
+<style>
+  .rehearsal {
+    padding-block: 88px 40px;
+  }
+
+  .log {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+    grid-template-areas:
+      'tally calendar'
+      'recent topics'
+      'foot foot';
+    gap: 28px 48px;
+    padding: 28px 32px;
+  }
+
+  .tally {
+    grid-area: tally;
+  }
+
+  .calendar {
+    grid-area: calendar;
+    margin: 0;
+    min-width: 0;
+  }
+
+  .recent {
+    grid-area: recent;
+  }
+
+  .topics {
+    grid-area: topics;
+  }
+
+  .foot {
+    grid-area: foot;
+    margin: 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 15px;
+  }
+
+  .big {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 26px;
+    line-height: 1.2;
+  }
+
+  .num {
+    display: block;
+    font-size: clamp(56px, 6vw, 72px);
+    line-height: 1;
+    color: var(--brass);
+  }
+
+  .share {
+    margin: 6px 0 18px;
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  /* One bar, split by difficulty: the mix matters more than the total. */
+  .mix {
+    display: flex;
+    gap: 3px;
+    height: 14px;
+  }
+
+  .seg {
+    min-width: 6px;
+    border-radius: 3px;
+  }
+
+  .seg--easy {
+    background: var(--chip);
+  }
+
+  .seg--medium {
+    background: var(--brass);
+  }
+
+  .seg--hard {
+    background: var(--marquee);
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 18px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  .legend strong {
+    color: var(--text);
+  }
+
+  .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    border-radius: 2px;
+  }
+
+  figcaption {
+    margin-bottom: 12px;
+    font-size: 16px;
+    color: var(--muted);
+  }
+
+  figcaption strong {
+    color: var(--text);
+  }
+
+  /* The calendar: square pixels, a week to a column, Monday on top. The cells grow to fill
+     the column while the run is young and shrink as the weeks pile up, down to 9px. */
+  .cal-scroll {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .cal {
+    --gap: 3px;
+    max-width: calc(var(--weeks) * 30px);
+    min-width: calc(var(--weeks) * 12px);
+  }
+
+  .months,
+  .cells {
+    display: grid;
+    grid-template-columns: repeat(var(--weeks), minmax(0, 1fr));
+    column-gap: var(--gap);
+  }
+
+  .months {
+    margin-bottom: 4px;
+    font: 400 12px/1 var(--font-label);
+    color: var(--muted);
+  }
+
+  .months span {
+    white-space: nowrap;
+  }
+
+  .cells {
+    grid-template-rows: repeat(7, auto);
+    grid-auto-flow: column;
+    row-gap: var(--gap);
+  }
+
+  .cells .cell {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .cell {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+  }
+
+  .l0 {
+    background: color-mix(in srgb, var(--text) 9%, transparent);
+  }
+
+  .l1 {
+    background: color-mix(in srgb, var(--brass) 35%, var(--surface));
+  }
+
+  .l2 {
+    background: color-mix(in srgb, var(--brass) 60%, var(--surface));
+  }
+
+  .l3 {
+    background: color-mix(in srgb, var(--brass) 82%, var(--surface));
+  }
+
+  .l4 {
+    background: var(--brass-hi);
+  }
+
+  .empty {
+    background: transparent;
+  }
+
+  .scale {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  h3.eyebrow {
+    margin-bottom: 10px;
+  }
+
+  .recent ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .recent li {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 6px;
+    border-bottom: 1px dashed var(--line);
+    font-size: 16px;
+  }
+
+  .when {
+    flex: none;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .topics .n {
+    margin-left: 4px;
+    color: var(--brass);
+    font-weight: 700;
+  }
+
+  @media (max-width: 860px) {
+    .log {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: 'tally' 'calendar' 'recent' 'topics' 'foot';
+      padding: 22px 18px;
+    }
+  }
+</style>

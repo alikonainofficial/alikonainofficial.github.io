@@ -18,9 +18,29 @@ const games = [
   { title: 'Drum Kit', line: 'Play the drums with your keyboard.', href: 'https://alikonainofficial.github.io/drumkit/', img: drumkit },
   { title: 'Dice Roller', line: 'Settle an argument the fair way.', href: 'https://alikonainofficial.github.io/randomdicegenerator/', img: dice },
 ];
+
+// The arcade carpet: neon squiggles, triangles, rings and planets on black, like every arcade
+// floor in 1989. One 240px tile, repeated; drawn as SVG so it stays sharp at any size.
+const carpet = `<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240' fill='none' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'>
+<path d='M18 44q15-20 30 0t30 0t30 0' stroke='#2de2ff'/>
+<path d='M150 26l24 40h-48z' stroke='#ff3df0'/>
+<circle cx='204' cy='150' r='13' stroke='#ffe14d'/>
+<path d='M30 160l14-14 14 14 14-14 14 14' stroke='#9b5cff'/>
+<circle cx='116' cy='120' r='9' fill='#ff7a59' stroke='none'/>
+<ellipse cx='116' cy='120' rx='17' ry='5' stroke='#ff7a59' stroke-width='3'/>
+<path d='M168 208q12-14 24 0t24 0' stroke='#3dff9a'/>
+<path d='M60 212l10 10m0-10l-10 10' stroke='#2de2ff' stroke-width='3'/>
+<path d='M214 64l8 8m0-8l-8 8' stroke='#ffe14d' stroke-width='3'/>
+<circle cx='92' cy='70' r='3' fill='#ff3df0' stroke='none'/>
+<circle cx='30' cy='100' r='3' fill='#ffe14d' stroke='none'/>
+<circle cx='186' cy='104' r='3' fill='#2de2ff' stroke='none'/>
+<circle cx='132' cy='180' r='3' fill='#9b5cff' stroke='none'/>
+<path d='M120 232l12-20 12 20' stroke='#2de2ff' stroke-width='3'/>
+</svg>`;
+const carpetUrl = `url("data:image/svg+xml,${encodeURIComponent(carpet.replace(/\n/g, ''))}")`;
 ---
 
-<section id="arcade" class="arcade" aria-labelledby="arcade-title" data-dwell="the arcade">
+<section id="arcade" class="arcade" aria-labelledby="arcade-title" data-dwell="the arcade" style={`--carpet:${carpetUrl}`}>
   <div class="wrap inner">
     <div class="section-head gel-cyan">
       <div class="arcade-title">
@@ -51,12 +71,49 @@ const games = [
 </section>
 
 <style>
+  /* The back room is its own world: lights down, neon carpet, cabinets glowing. Dark in either house light. */
   .arcade {
-    background: var(--bg-deep);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, rgba(155, 92, 255, 0.22), transparent 70%),
+      #0b0616;
+    color: #f4efff;
+  }
+
+  .arcade::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: var(--carpet) 0 0 / 240px 240px;
+    opacity: 0.26;
+  }
+
+  /* Darker toward the walls, so the carpet glows most under the cabinets. */
+  .arcade::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 75% at 50% 55%, transparent 40%, rgba(5, 2, 12, 0.85) 100%);
   }
 
   .inner {
     padding-block: 88px;
+  }
+
+  .arcade :global(.section-head h2) {
+    color: #ffffff;
+  }
+
+  .arcade :global(.section-head p) {
+    color: #cfc4ec;
+  }
+
+  .arcade :global(.section-head::before) {
+    display: none;
   }
 
   .arcade-title {
@@ -70,8 +127,11 @@ const games = [
     font-family: var(--font-sign);
     font-size: clamp(44px, 6.4vw, 80px);
     line-height: 0.95;
-    color: var(--marquee);
+    color: #ff3df0;
     letter-spacing: 0.02em;
+    text-shadow:
+      0 0 8px rgba(255, 61, 240, 0.8),
+      0 0 26px rgba(255, 61, 240, 0.55);
   }
 
   .games {
@@ -83,6 +143,19 @@ const games = [
     gap: 18px;
   }
 
+  /* Each cabinet is trimmed in one of three neon colours, in turn. */
+  .games li:nth-child(3n + 1) {
+    --neon: #ff3df0;
+  }
+
+  .games li:nth-child(3n + 2) {
+    --neon: #2de2ff;
+  }
+
+  .games li:nth-child(3n) {
+    --neon: #ffe14d;
+  }
+
   .game {
     height: 100%;
     display: flex;
@@ -90,18 +163,23 @@ const games = [
     gap: 4px;
     padding: 10px 10px 18px;
     border-radius: 14px;
-    background: var(--surface);
-    color: var(--text);
+    background: rgba(22, 12, 40, 0.92);
+    color: #f4efff;
     text-decoration: none;
+    box-shadow:
+      inset 0 0 0 2px color-mix(in srgb, var(--neon) 70%, transparent),
+      0 0 22px color-mix(in srgb, var(--neon) 22%, transparent);
     transition:
       transform 200ms ease,
-      background-color 200ms ease;
+      box-shadow 200ms ease;
   }
 
   .game:hover {
     transform: translateY(-3px);
-    background: var(--surface-2);
-    color: var(--text);
+    color: #ffffff;
+    box-shadow:
+      inset 0 0 0 2px var(--neon),
+      0 0 34px color-mix(in srgb, var(--neon) 45%, transparent);
   }
 
   /* A cabinet bezel around a curved CRT screen. The bezel is black in either light, like the real thing. */
@@ -123,25 +201,12 @@ const games = [
     border-radius: 12px / 18px;
   }
 
+  /* Screens run in attract mode: full colour, always on. */
   .screen :global(img) {
     width: 100%;
     height: auto;
     aspect-ratio: 2 / 1;
     object-fit: cover;
-    filter: grayscale(0.8) contrast(1.08) brightness(0.85);
-    transition: filter 220ms ease;
-  }
-
-  /* At rest the screens glow in the room's teal; they switch to full colour when you reach for one. */
-  .screen::before {
-    content: '';
-    position: absolute;
-    z-index: 1;
-    inset: 0;
-    background: #2f8f8a;
-    mix-blend-mode: color;
-    opacity: 0.8;
-    transition: opacity 220ms ease;
   }
 
   /* Scanlines and the dark corners of a tube. */
@@ -172,16 +237,6 @@ const games = [
     opacity: 0;
   }
 
-  .game:hover .screen :global(img),
-  .game:focus-visible .screen :global(img) {
-    filter: none;
-  }
-
-  .game:hover .screen::before,
-  .game:focus-visible .screen::before {
-    opacity: 0;
-  }
-
   .game:hover .press,
   .game:focus-visible .press {
     opacity: 1;
@@ -198,13 +253,13 @@ const games = [
   .game-title {
     padding-inline: 6px;
     font: 700 19px/1.25 var(--font-body);
-    color: var(--text);
+    color: #ffffff;
   }
 
   .game-line {
     padding-inline: 6px;
     font-size: 16px;
-    color: var(--muted);
+    color: #cfc4ec;
   }
 
   /* Two to a row on phones, so the arcade doesn't become a very long hallway. */
