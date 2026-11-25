@@ -5,9 +5,13 @@ on:
     branches: [master]
   pull_request:
   workflow_dispatch:
+  # Daily, for the rehearsal log's LeetCode snapshot. An odd minute, because
+  # GitHub may delay or drop scheduled runs at the top of the hour.
+  schedule:
+    - cron: '17 21 * * *' # 02:17 in Lahore
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -26,6 +30,24 @@ jobs:
           node-version: 24
           cache: npm
       - run: node --version && npm ci
+
+      # Never fails the build: if LeetCode is unreachable, the last snapshot stays.
+      - name: Refresh the LeetCode snapshot
+        if: github.event_name != 'pull_request'
+        run: node scripts/fetch-leetcode.mjs
+
+      # Only the daily run commits, so pushes don't trigger a commit of their own. Committing
+      # also counts as activity, which keeps GitHub from switching the schedule off after 60 quiet days.
+      - name: Commit the snapshot
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          git diff --quiet -- src/data/leetcode.json && exit 0
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/data/leetcode.json
+          git commit -m 'Update the rehearsal log'
+          git push
+
       - name: Unit tests
         run: npm test
       - name: Type check and build

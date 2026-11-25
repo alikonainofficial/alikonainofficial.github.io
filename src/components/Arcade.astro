@@ -1,6 +1,8 @@
 ---
 import { Image } from 'astro:assets';
 import NewTabLink from './NewTabLink.astro';
+import TopFive from './TopFive.astro';
+import { games as favouriteGames } from '../lib/favourites';
 import carracing from '../assets/arcade/carracing.png';
 import warrior from '../assets/arcade/warriordungeon.png';
 import brick from '../assets/arcade/brickbreaker.png';
@@ -27,6 +29,19 @@ const games = [
         <p class="arcade-sign" aria-hidden="true">Arcade</p>
         <h2 id="arcade-title" class="display">The back room arcade</h2>
       </div>
+      <p>Two shelves: the games I can't stop playing, and the ones I built myself.</p>
+    </div>
+
+    <div class="shelf" data-dwell="player one's shelf">
+      <div class="shelf-head">
+        <h3 class="display">Player One's shelf</h3>
+        <p>My top five, in order: the ones I'd take to a desert island, if it had a socket.</p>
+      </div>
+      <TopFive items={favouriteGames} variant="cartridge" label="My top five games, in order" />
+    </div>
+
+    <div class="shelf-head">
+      <h3 class="display">Built in the back room</h3>
       <p>Where it started: small browser games I built in 2020 while learning JavaScript. They still run. Best on a laptop with a keyboard.</p>
     </div>
     <ul class="games">
@@ -72,6 +87,32 @@ const games = [
     line-height: 0.95;
     color: var(--marquee);
     letter-spacing: 0.02em;
+  }
+
+  .shelf {
+    margin-bottom: 72px;
+  }
+
+  .shelf-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 32px;
+    margin-bottom: 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .shelf-head h3 {
+    margin: 0;
+    font-size: clamp(28px, 3vw, 36px);
+  }
+
+  .shelf-head p {
+    margin: 0;
+    max-width: 52ch;
+    color: var(--muted);
   }
 
   .games {

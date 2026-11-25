@@ -1,0 +1,21 @@
+---
+import TopFive from './TopFive.astro';
+import { anime } from '../lib/favourites';
+---
+
+<section id="late-show" class="late-show wrap" aria-labelledby="late-show-title" data-dwell="the late show">
+  <div class="section-head gel-magenta">
+    <div>
+      <p class="eyebrow">Now showing</p>
+      <h2 id="late-show-title" class="display">The late show</h2>
+    </div>
+    <p>After 280 anime, these are the five I'd still stay up for. In order, and I'll defend every place.</p>
+  </div>
+  <TopFive items={anime} variant="poster" label="My top five anime, in order" />
+</section>
+
+<style>
+  .late-show {
+    padding-block: 40px 96px;
+  }
+</style>

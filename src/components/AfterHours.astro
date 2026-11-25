@@ -1,0 +1,289 @@
+---
+/**
+ * After hours: three pixel scenes of Ali off the clock. Each rests on its poster
+ * frame and plays once, for a few seconds, when the visitor presses start.
+ * Under reduced motion there is no start button, only the still.
+ */
+import { finalState, scenes, type Scene, type SceneLayer } from '../lib/scenes';
+import { spritePaths } from '../lib/sprite';
+
+const paths = (scene: Scene, grid: string[]) => spritePaths({ width: scene.width, height: scene.height, grid, palette: scene.palette });
+const startOf = (l: SceneLayer) => ({ f: 0, show: true, dx: 0, dy: 0, ...l.start });
+---
+
+<section id="after-hours" class="after-hours wrap" aria-labelledby="after-hours-title" data-dwell="the after-hours reel">
+  <div class="section-head gel-coral">
+    <div>
+      <p class="eyebrow">Off the clock</p>
+      <h2 id="after-hours-title" class="display">After hours</h2>
+    </div>
+    <p>What I get up to once the laptop closes. Press start on any of them.</p>
+  </div>
+
+  <ul class="reels">
+    {
+      scenes.map((scene) => {
+        const end = finalState(scene);
+        return (
+          <li class="reel panel" data-scene data-duration={scene.duration} data-steps={JSON.stringify(scene.steps)}>
+            <div class="screen">
+              <svg
+                viewBox={`0 0 ${scene.width} ${scene.height}`}
+                shape-rendering="crispEdges"
+                preserveAspectRatio="xMidYMid slice"
+                role="img"
+                aria-label={scene.label}
+              >
+                {scene.layers.map((layer) => {
+                  const st = end.layers[layer.name]!;
+                  return (
+                    <g
+                      data-layer={layer.name}
+                      data-start={JSON.stringify(startOf(layer))}
+                      data-end={JSON.stringify(st)}
+                      data-speed={layer.speed}
+                      data-wrap={layer.wrap}
+                      data-fps={layer.fps}
+                      transform={`translate(${st.dx} ${st.dy})`}
+                      style={st.show ? undefined : 'display:none'}
+                    >
+                      {layer.frames.map((grid, i) => {
+                        const ps = paths(scene, grid);
+                        return (
+                          <g data-f={i} style={i === st.f ? undefined : 'display:none'}>
+                            {ps.map(({ fill, d }) => (
+                              <path fill={fill} d={d} />
+                            ))}
+                            {layer.wrap && (
+                              <g transform={`translate(${layer.wrap} 0)`}>
+                                {ps.map(({ fill, d }) => (
+                                  <path fill={fill} d={d} />
+                                ))}
+                              </g>
+                            )}
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })}
+              </svg>
+              <p class="hud" data-hud hidden aria-live="polite"></p>
+            </div>
+            <div class="reel-body">
+              <h3>{scene.title}</h3>
+              <p>{scene.caption}</p>
+              <button type="button" class="btn btn--line play" data-play aria-label={`Press start: ${scene.title}`}>
+                <span aria-hidden="true">▶</span> <span data-play-label>Press start</span>
+              </button>
+            </div>
+          </li>
+        );
+      })
+    }
+  </ul>
+</section>
+
+<script>
+  interface State {
+    f: number;
+    show: boolean;
+    dx: number;
+    dy: number;
+  }
+  interface Step {
+    at: number;
+    set?: Record<string, Partial<State>>;
+    hud?: string;
+  }
+
+  let current: { card: HTMLElement; raf: number; finish: () => void } | undefined;
+
+  const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function layers(card: HTMLElement) {
+    return [...card.querySelectorAll<SVGGElement>('[data-layer]')];
+  }
+
+  function draw(layer: SVGGElement, st: State, offset = 0) {
+    layer.style.display = st.show ? '' : 'none';
+    layer.setAttribute('transform', `translate(${st.dx - offset} ${st.dy})`);
+    layer.querySelectorAll<SVGGElement>(':scope > [data-f]').forEach((g) => {
+      g.style.display = Number(g.dataset.f) === st.f ? '' : 'none';
+    });
+  }
+
+  function setHud(card: HTMLElement, text: string) {
+    const hud = card.querySelector<HTMLElement>('[data-hud]')!;
+    hud.textContent = text;
+    hud.hidden = !text;
+  }
+
+  function play(card: HTMLElement) {
+    current?.finish();
+    const steps = JSON.parse(card.dataset.steps ?? '[]') as Step[];
+    const duration = Number(card.dataset.duration);
+    const ls = layers(card);
+    const state = new Map(ls.map((l) => [l, JSON.parse(l.dataset.start!) as State]));
+    const byName = new Map(ls.map((l) => [l.dataset.layer!, l]));
+    const button = card.querySelector<HTMLButtonElement>('[data-play]')!;
+    const label = card.querySelector<HTMLElement>('[data-play-label]')!;
+    let next = 0;
+    const t0 = performance.now();
+
+    const finish = () => {
+      cancelAnimationFrame(run.raf);
+      ls.forEach((l) => draw(l, JSON.parse(l.dataset.end!) as State));
+      setHud(card, steps.filter((s) => s.hud !== undefined).at(-1)?.hud ?? '');
+      card.classList.remove('is-playing');
+      button.disabled = false;
+      label.textContent = 'Play again';
+      if (current === run) current = undefined;
+    };
+
+    const tick = (now: number) => {
+      const t = now - t0;
+      if (t >= duration) return finish();
+      while (next < steps.length && steps[next]!.at <= t) {
+        const step = steps[next++]!;
+        for (const [name, s] of Object.entries(step.set ?? {})) {
+          const l = byName.get(name);
+          if (l) Object.assign(state.get(l)!, s);
+        }
+        if (step.hud !== undefined) setHud(card, step.hud);
+      }
+      for (const l of ls) {
+        const st = { ...state.get(l)! };
+        const fps = Number(l.dataset.fps || 0);
+        const frames = l.querySelectorAll(':scope > [data-f]').length;
+        if (fps && frames > 1) st.f = Math.floor((t * fps) / 1000) % frames;
+        const speed = Number(l.dataset.speed || 0);
+        const wrap = Number(l.dataset.wrap || 0);
+        draw(l, st, speed && wrap ? Math.round((speed * t) / 1000) % wrap : 0);
+      }
+      run.raf = requestAnimationFrame(tick);
+    };
+
+    const run = { card, raf: 0, finish };
+    current = run;
+    card.classList.add('is-playing');
+    button.disabled = true;
+    label.textContent = 'Playing';
+    run.raf = requestAnimationFrame(tick);
+  }
+
+  // Only one scene plays at a time, and a scene scrolled out of view stops on its poster frame.
+  const watcher = new IntersectionObserver((entries) => {
+    for (const e of entries) if (!e.isIntersecting && current?.card === e.target) current.finish();
+  });
+
+  document.addEventListener('astro:page-load', () => {
+    current = undefined;
+    document.querySelectorAll<HTMLElement>('[data-scene]').forEach((card) => {
+      watcher.observe(card);
+      const button = card.querySelector<HTMLButtonElement>('[data-play]')!;
+      button.hidden = reduced();
+      button.addEventListener('click', () => play(card));
+    });
+  });
+</script>
+
+<style>
+  .after-hours {
+    padding-block: 88px 64px;
+  }
+
+  .reels {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 22px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .reel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* The scene sits in a dark bezel, like the arcade cabinets, with a pixel shadow under it. */
+  .screen {
+    position: relative;
+    margin: 10px 10px 0;
+    padding: 6px;
+    border-radius: 10px;
+    background: #0b1416;
+    box-shadow: inset 0 0 0 2px #26363c;
+  }
+
+  .screen svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: 6px;
+    image-rendering: pixelated;
+  }
+
+  .hud {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    translate: -50% 0;
+    margin: 0;
+    padding: 3px 8px;
+    background: rgba(0, 0, 0, 0.62);
+    color: #ffffff;
+    font: 400 14px/1.2 var(--font-game);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  .reel-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 16px 20px 20px;
+  }
+
+  .reel-body h3 {
+    margin: 0;
+    font: 500 24px/1.2 var(--font-display);
+  }
+
+  .reel-body p {
+    margin: 0 0 8px;
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  .play {
+    margin-top: auto;
+    min-height: 44px;
+    padding: 6px 18px;
+    font: 400 15px/1 var(--font-game);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .play[hidden] {
+    display: none;
+  }
+
+  .play:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  @media (max-width: 960px) {
+    .reels {
+      grid-template-columns: minmax(0, 1fr);
+      max-width: 620px;
+      margin-inline: auto;
+    }
+  }
+</style>
