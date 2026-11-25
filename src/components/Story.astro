@@ -1,98 +1,216 @@
 ---
-import { acts, education, timeInProduction } from '../lib/profile';
+import { acts, education, person, timeInProduction } from '../lib/profile';
+import { grain, styleVars } from '../lib/textures';
 
 const { years } = timeInProduction();
+const wall = styleVars({ '--grain': grain({ frequency: 0.65, tone: 'dark', amount: 0.35, seed: 5 }) });
 ---
 
-<section id="story" class="story wrap" aria-labelledby="story-title" data-dwell="my story">
-  <div class="setlist">
-    <div class="section-head gel-magenta" data-rise>
-      <h2 id="story-title" class="display">The set list</h2>
-      <p>{years}+ years in production, most recent first.</p>
-    </div>
-    <ol class="sets">
-      {
-        acts.map((act) => (
-          <li class="set" data-rise>
-            <span class="dates">
-              {act.start} to {act.end}
-            </span>
-            <span class="set-body">
-              <span class="set-title">
-                {act.role}, <span class="company">{act.company}</span>
+<section id="story" class="story" aria-labelledby="story-title" data-dwell="my story" style={wall}>
+  <div class="wrap stage">
+    <div class="poster">
+      <span class="tape tape--left" aria-hidden="true"></span>
+      <span class="tape tape--right" aria-hidden="true"></span>
+      <div class="bill" data-rise>
+        <p class="headliner">{person.name}, live in production</p>
+        <h2 id="story-title" class="display">The set list</h2>
+        <p class="since">{years}+ years in production, most recent first.</p>
+      </div>
+      <ol class="sets">
+        {
+          acts.map((act) => (
+            <li class="set" data-rise>
+              <span class="dates">
+                {act.start} to {act.end}
               </span>
-              <span class="set-line">{act.line}</span>
-            </span>
-          </li>
-        ))
-      }
-    </ol>
-    <p class="education" data-rise>
-      Studied at {
-        education.map((e, i) => (
-          <>
-            {i > 0 && ' and '}
-            {e.school.split(',')[0]} ({e.degree.replace('Master of Business Administration', 'MBA')})
-          </>
-        ))
-      }.
-    </p>
+              <span class="set-body">
+                <span class="venue">{act.company}</span>
+                <span class="role">{act.role}</span>
+                <span class="set-line">{act.line}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="education" data-rise>
+        Studied at {
+          education.map((e, i) => (
+            <>
+              {i > 0 && ' and '}
+              {e.school.split(',')[0]} ({e.degree.replace('Master of Business Administration', 'MBA')})
+            </>
+          ))
+        }.
+      </p>
+    </div>
   </div>
-
 </section>
 
 <style>
+  /*
+   * A tour poster, taped to a wall under a magenta stage wash. Screen-printed in two colours on dark
+   * stock, with the headline printed a little off register. Its own palette in either house light.
+   */
   .story {
-    padding-block: 88px;
+    --text: #f4e7d4;
+    --muted: #d8bfd0;
+    --brass: #f6c97c;
+    --brass-hi: #fbdca6;
+    --bg: #1d0c1d;
+    --ink-magenta: #f27ab8;
+    --stock: #2b1231;
+    position: relative;
+    isolation: isolate;
+    color: var(--text);
+    color-scheme: dark;
+    background:
+      radial-gradient(ellipse 55% 50% at 50% 0%, rgba(242, 122, 184, 0.34), transparent 75%),
+      radial-gradient(ellipse 35% 40% at 15% 70%, rgba(150, 70, 200, 0.16), transparent 70%),
+      var(--grain) 0 0 / 220px 220px,
+      #1d0c1d;
+  }
+
+  .stage {
+    padding-block: 96px 120px;
+  }
+
+  .poster {
+    position: relative;
+    max-width: 940px;
+    margin-inline: auto;
+    padding: clamp(36px, 6vw, 64px) clamp(20px, 6vw, 72px) clamp(28px, 5vw, 48px);
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242, 122, 184, 0.12), transparent 70%),
+      var(--stock);
+    box-shadow:
+      inset 0 0 0 10px var(--stock),
+      inset 0 0 0 12px var(--ink-magenta),
+      inset 0 0 0 16px var(--stock),
+      inset 0 0 0 17px color-mix(in srgb, var(--text) 55%, transparent),
+      0 30px 60px rgba(8, 2, 10, 0.6);
+  }
+
+  /* Two strips of masking tape hold it up. */
+  .tape {
+    position: absolute;
+    top: -14px;
+    width: 120px;
+    height: 32px;
+    background: rgba(236, 224, 196, 0.42);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+
+  .tape--left {
+    left: -24px;
+    rotate: -32deg;
+  }
+
+  .tape--right {
+    right: -24px;
+    rotate: 30deg;
+  }
+
+  .bill {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .headliner {
+    margin: 0 0 10px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: clamp(18px, 2vw, 22px);
+    color: var(--ink-magenta);
+  }
+
+  /* The headline, printed in cream with the magenta pass a few pixels off. */
+  .bill h2 {
+    margin: 0;
+    font-size: clamp(56px, 9vw, 112px);
+    font-weight: 700;
+    line-height: 0.92;
+    color: var(--text);
+    text-shadow: 4px 4px 0 var(--ink-magenta);
+  }
+
+  .since {
+    margin: 16px auto 0;
+    max-width: 40ch;
+    color: var(--muted);
   }
 
   .sets {
     margin: 0;
     padding: 0;
     list-style: none;
-    border-top: 1px solid var(--line);
   }
 
   .set {
     display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
-    gap: 4px 24px;
-    padding-block: 20px;
-    border-bottom: 1px solid var(--line);
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 4px 28px;
+    padding-block: 22px;
+    border-top: 2px dotted color-mix(in srgb, var(--ink-magenta) 45%, transparent);
+  }
+
+  .set:first-child {
+    border-top: 0;
   }
 
   .dates {
-    color: var(--muted);
-    font-size: 16px;
-    padding-top: 3px;
+    padding-top: 6px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.3;
+    color: var(--ink-magenta);
   }
 
   .set-body {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
 
-  .set-title {
+  .venue {
     font-family: var(--font-display);
-    font-size: 24px;
-    line-height: 1.25;
+    font-size: clamp(26px, 3vw, 32px);
+    font-weight: 600;
+    line-height: 1.15;
   }
 
-  .company {
+  .role {
+    font-weight: 600;
     color: var(--brass);
   }
 
-  .education {
-    margin: 20px 0 0;
+  .set-line {
+    margin-top: 4px;
     color: var(--muted);
-    font-size: 16px;
   }
 
+  .education {
+    margin: 22px 0 0;
+    padding-top: 20px;
+    border-top: 2px dotted color-mix(in srgb, var(--ink-magenta) 45%, transparent);
+    text-align: center;
+    color: var(--muted);
+    font-size: 15px;
+  }
 
   @media (max-width: 640px) {
     .set {
       grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dates {
+      padding-top: 0;
+      font-size: 17px;
+    }
+
+    .tape {
+      width: 84px;
+      height: 26px;
     }
   }
 </style>
