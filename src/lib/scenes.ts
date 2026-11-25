@@ -398,139 +398,190 @@ const GIRL = [
   '.....KKKKKKKKKKK....',
 ];
 
-/** Her torso with the arms in front, for holding the sax. The arms are drawn on afterwards. */
-const GIRL_SAX_ARMS = ['...KKVVVVVVVVVVKK...', '....KVVViVVVVVVK....', '....KVVVVVVVVVVK....', '...KvVVVVVVVVVVvK...'];
-
-function girl(pose: 'idle' | 'trance' | 'sax'): string[] {
-  const g = [...GIRL];
-  if (pose !== 'idle') {
-    // Eyes closed: two happy curves where the eyes were.
-    g[11] = g[11]!.replace(/EW/g, 'jj');
-    g[12] = g[12]!.replace(/EE/g, 'KK');
-  }
-  if (pose === 'sax') g.splice(18, 4, ...GIRL_SAX_ARMS);
-  return g;
+/** A pocket watch on a chain, swinging like a pendulum from `pivot`. */
+function watchAt(r: Raster, px: number, py: number, deg: number): void {
+  const len = 8;
+  const rad = (deg * Math.PI) / 180;
+  const cx = px + Math.sin(rad) * len;
+  const cy = py + Math.cos(rad) * len;
+  // The chain, a pixel at a time so it reads as links.
+  for (let d = 1; d < len - 2; d++) r.set(px + Math.sin(rad) * d, py + Math.cos(rad) * d, d % 2 ? 'G' : 'g');
+  r.disc(cx, cy, 2.9, 'G').disc(cx, cy, 1.7, 'n').set(cx, cy, 'k').set(cx - 1, cy - 2, 'n');
 }
 
-const SAX = ['......kk.', '.....GG..', '.....GG..', '....GGg..', '....GGg..', '...GGg...', '...GGg...', 'GG.GGg...', 'GGGGGg...', '.GGGg....', '..gg.....'];
-
-const NOTE = ['..nn', '..n.', '..n.', 'nnn.', 'nn..'];
+const Z_BIG = ['ZZZZZ', '...Z.', '..Z..', '.Z...', 'ZZZZZ'];
+const Z_SMALL = ['ZZZZ', '..Z.', '.Z..', 'ZZZZ'];
 
 function showInMyHead(): Scene {
-  const hx = 16;
-  const vx = 60;
-  const y = 21;
+  const hx = 22;
+  const y = 19;
+  const vx = hx + 19;
+  const gy = 18;
 
-  const stage = new Raster(W, H);
-  for (let x = 0; x < W; x++) {
-    const fold = x % 8;
-    stage.rect(x, 0, 1, 44, fold === 0 || fold === 1 ? 'C' : fold === 4 ? 'u' : 'c');
-  }
-  // A valance across the top with brass fringe, then the boards.
-  stage.rect(0, 0, W, 4, 'C').rect(0, 4, W, 1, 'G');
-  for (let x = 1; x < W; x += 3) stage.set(x, 5, 'G');
-  stage.rect(0, 44, W, H - 44, 'f');
-  for (let py = 46; py < H; py += 3) stage.rect(0, py, W, 1, 'F');
-  stage.rect(0, H - 1, W, 1, 'e');
-  const light = new Raster(W, H).poly(
+  // A cosy room at night: striped wallpaper, a moonlit window, a lamp, a rug and an armchair.
+  const room = new Raster(W, H);
+  room.rect(0, 0, W, 44, '1');
+  for (let x = 2; x < W; x += 6) room.rect(x, 0, 2, 34, '2');
+  room.rect(0, 34, W, 10, '3').rect(0, 34, W, 1, '4');
+  room.rect(4, 6, 18, 20, '5').rect(5, 7, 16, 18, '6').rect(12, 7, 2, 18, '5').rect(5, 15, 16, 1, '5');
+  room.disc(9, 11, 2.6, 'M').set(17, 9, 'N').set(19, 13, 'N').set(16, 20, 'N').set(7, 21, 'N');
+  room.rect(0, 44, W, H - 44, '7');
+  for (let py = 46; py < H; py += 3) room.rect(0, py, W, 1, '8');
+  room.poly(
     [
-      [30, 5],
-      [66, 5],
-      [92, 52],
-      [4, 52],
+      [34, 47],
+      [80, 47],
+      [86, 52],
+      [28, 52],
+    ],
+    'r',
+  ).poly(
+    [
+      [36, 48],
+      [78, 48],
+      [83, 51],
+      [31, 51],
+    ],
+    '9',
+  );
+  room.rect(85, 14, 1, 31, 'X').rect(82, 44, 7, 1, 'X').poly(
+    [
+      [82, 8],
+      [89, 8],
+      [91, 14],
+      [80, 14],
     ],
     'L',
   );
 
-  const host = (raised: boolean) => {
+  const glow = new Raster(W, H).disc(85.5, 14, 13, 'e');
+
+  // The armchair, built around where she sits.
+  // The back and seat sit behind her; the armrests go in front, so she sits in it, not on it.
+  const chair = new Raster(W, H);
+  chair.rect(vx - 5, gy + 5, 30, 22, 'C').rect(vx - 4, gy + 4, 28, 1, 'C').rect(vx - 2, gy + 3, 24, 1, 'C');
+  chair.rect(vx - 3, gy + 5, 26, 17, 'c').rect(vx - 2, gy + 4, 24, 1, 'u');
+  for (const bx of [vx + 2, vx + 9, vx + 16]) chair.set(bx, gy + 9, 'C').set(bx, gy + 14, 'C');
+  chair.rect(vx - 4, gy + 22, 28, 2, 'u').rect(vx - 4, gy + 24, 28, 3, 'C');
+  chair.rect(vx - 4, gy + 27, 2, 2, 'f').rect(vx + 22, gy + 27, 2, 2, 'f');
+  const arms = new Raster(W, H);
+  for (const ax of [vx - 3, vx + 16]) arms.rect(ax, gy + 16, 7, 11, 'c').rect(ax, gy + 16, 7, 2, 'u').rect(ax, gy + 25, 7, 2, 'C').rect(ax + 6, gy + 18, 1, 7, 'C');
+
+  const host = () => {
     const r = new Raster(W, H);
-    if (raised) r.line(hx + 18, y + 17, hx + 21, y + 9, 'A', 2).rect(hx + 21, y + 7, 2, 2, 'S');
-    r.blit(body(raised ? ARM_RAISED : ARMS_DOWN), hx, y);
+    r.line(hx + 18, y + 17, hx + 22, y + 8, 'A', 2).rect(hx + 22, y + 6, 2, 2, 'S');
+    r.blit(body(ARM_RAISED), hx, y);
     r.blit(hat.grid, hx, y - hat.height, { K: 'Z', B: 'b' });
     return r.grid();
   };
 
-  const volunteer = (pose: 'idle' | 'trance' | 'sax') => {
-    const r = new Raster(W, H);
-    r.blit(girl(pose), vx, y);
-    if (pose === 'sax') {
-      r.blit(SAX, vx + 4, y + 13);
-      // Arms from the shoulders to the keys: one hand high on the neck, one low on the body.
-      r.line(vx + 16, y + 18, vx + 12, y + 16, 'j').rect(vx + 10, y + 15, 2, 2, 'j');
-      r.line(vx + 3, y + 18, vx + 6, y + 21, 'j').rect(vx + 6, y + 21, 2, 2, 'j');
+  /** Her, sitting: head and dress as standing, legs dangling over the seat. */
+  const SITTING_LEGS = ['....KKKKKKKKKKKK....', '......KjjK.KjjK.....', '.....KyyyyKyyyyK....', '.....KKKKKKKKKKK....'];
+  const girlSitting = (eyes: 'open' | 'drowsy' | 'asleep') => {
+    const g = [...GIRL.slice(0, 23), ...SITTING_LEGS];
+    if (eyes === 'drowsy') {
+      // Heavy lids: the top half of each eye goes dark.
+      g[11] = g[11]!.replace(/EW/g, 'KK');
     }
+    if (eyes === 'asleep') {
+      g[11] = g[11]!.replace(/EW/g, 'jj');
+      g[12] = g[12]!.replace(/EE/g, 'KK');
+      g[13] = g[13]!.replace('mm', 'jm');
+    }
+    const r = new Raster(W, H);
+    r.blit(g, vx, gy);
     return r.grid();
   };
 
-  const spark = new Raster(W, H);
-  spark.rect(hx + 25, y + 2, 1, 5, '*').rect(hx + 23, y + 4, 5, 1, '*').set(hx + 22, y + 1, '*').set(hx + 28, y + 1, '*');
-
-  const notes = [0, 1, 2].map((f) => {
+  // The pendulum swings from his hand: centre, out to the right, back through the middle, out to the left.
+  const angles = [0, 16, 28, 16, 0, -16, -28, -16];
+  const watch = angles.map((deg) => {
     const r = new Raster(W, H);
-    r.blit(NOTE, vx - 4, y + 12 - f * 3).blit(NOTE, vx - 2, y + 2 - f * 2).blit(NOTE, vx + 21, y + 6 - f * 3);
+    watchAt(r, hx + 23, y + 7, deg);
     return r.grid();
   });
 
+  const zzz = [0, 1, 2].map((f) => {
+    const r = new Raster(W, H);
+    r.blit(Z_SMALL, vx + 18, gy - 1 - f).blit(Z_BIG, vx + 22, gy - 6 - f).blit(Z_SMALL, vx + 28, gy - 11 - f);
+    return r.grid();
+  });
+
+  const OPEN = 0;
+  const DROWSY = 1;
+  const ASLEEP = 2;
   const steps: Step[] = [
-    { at: 0, set: { host: { f: 1 }, spark: { show: true }, volunteer: { f: 0, dx: 0 }, notes: { show: false } } },
-    { at: 450, set: { host: { f: 0 }, spark: { show: false }, volunteer: { f: 1 } } },
-    { at: 900, set: { volunteer: { dx: -1 } } },
-    { at: 1300, set: { volunteer: { dx: 1 } } },
-    { at: 1700, set: { volunteer: { dx: -1 } } },
-    { at: 2100, set: { volunteer: { dx: 0 } } },
-    { at: 2500, set: { host: { f: 1 }, spark: { show: true } } },
-    { at: 2950, set: { spark: { show: false }, volunteer: { f: 2 }, notes: { show: true } } },
+    { at: 0, set: { girl: { f: OPEN, dy: 0 }, zzz: { show: false } }, hud: 'You are getting sleepy…' },
+    { at: 1500, set: { girl: { f: DROWSY } } },
+    { at: 2400, set: { girl: { dy: 1 } }, hud: 'veeery sleepy…' },
+    { at: 2800, set: { girl: { dy: 0 } } },
+    { at: 3300, set: { girl: { dy: 1 } } },
+    { at: 3600, set: { girl: { f: ASLEEP }, zzz: { show: true } }, hud: 'Sweet dreams.' },
   ];
 
   return {
-    id: 'volunteer',
-    title: 'The show in my head',
-    caption: "A beginner's interest in mentalism and hypnosis. I've never done it on a stage; this is the show as I picture it.",
+    id: 'sleepy',
+    title: 'You are getting sleepy…',
+    caption: "A beginner's interest in mentalism and hypnosis. This is how I picture it going: a pocket watch, a comfy chair, a very good nap.",
     label:
-      'Pixel-art Ali in a top hat on an imagined stage, raising a hand toward a smiling girl from the audience who has her eyes closed and is happily playing a saxophone, with music notes in the air.',
+      'Pixel-art Ali in a top hat, swinging a pocket watch like a pendulum in front of a cute girl in a pink armchair. She has dozed off with a little smile, and Zzz float above her. A cosy room at night, with a lamp and a moonlit window.',
     width: W,
     height: H,
     palette: {
       ...ali.palette,
-      c: '#7a1a24',
-      C: '#5e121b',
-      u: '#932a35',
-      G: '#e2bb6e',
-      g: '#a8823e',
+      '1': '#2e2350',
+      '2': '#352a5c',
+      '3': '#47336c',
+      '4': '#6b4f9a',
+      '5': '#1b1433',
+      '6': '#163566',
+      M: '#fff1c7',
+      N: '#ffffff',
+      '7': '#6b4630',
+      '8': '#5a3a27',
+      '9': '#c2577a',
+      r: '#e98aa8',
+      X: '#2a2238',
+      L: '#ffd27a',
+      e: 'rgba(255, 210, 122, 0.16)',
+      p: '#ff9db5',
+      m: '#c2546a',
+      c: '#d65a6e',
+      C: '#a8404f',
+      u: '#ef8494',
+      f: '#3a2416',
+      G: '#e8c05a',
+      g: '#c9a24a',
+      n: '#fff7dd',
       k: '#1c1315',
-      f: '#5a3b24',
-      F: '#4a2f1c',
-      e: '#2f1d10',
-      L: 'rgba(255, 236, 190, 0.13)',
       Z: '#101014',
       T: '#26262e',
       t: '#3a3a46',
       b: '#d9b36c',
-      n: '#f3efe6',
-      '*': '#ff7a59',
       q: '#4b2c2a',
       Q: '#8a5a4e',
       x: '#2e1a1a',
       R: '#ff6f9f',
       j: '#f5cfb0',
       J: '#dba98a',
-      p: '#ff9db5',
-      m: '#c2546a',
-      V: '#a98bff',
       v: '#7f63d6',
+      V: '#a98bff',
       i: '#cbb8ff',
       y: '#ff6f9f',
+      z: '#ffffff',
     },
     layers: [
-      { name: 'stage', frames: [stage.grid()] },
-      { name: 'light', frames: [light.grid()] },
-      { name: 'host', frames: [host(false), host(true)] },
-      { name: 'spark', frames: [spark.grid()] },
-      { name: 'volunteer', frames: [volunteer('idle'), volunteer('trance'), volunteer('sax')] },
-      { name: 'notes', frames: notes, fps: 4 },
+      { name: 'room', frames: [room.grid()] },
+      { name: 'glow', frames: [glow.grid()] },
+      { name: 'chair', frames: [chair.grid()] },
+      { name: 'girl', frames: [girlSitting('open'), girlSitting('drowsy'), girlSitting('asleep')] },
+      { name: 'armrests', frames: [arms.grid()] },
+      { name: 'host', frames: [host()] },
+      { name: 'watch', frames: watch, fps: 8 },
+      { name: 'zzz', frames: zzz.map((g) => g.map((row) => row.replace(/Z/g, 'z'))), fps: 3 },
     ],
     steps,
-    duration: 6400,
+    duration: 6000,
   };
 }
 
