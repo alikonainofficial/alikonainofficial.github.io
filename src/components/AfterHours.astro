@@ -5,14 +5,57 @@
  * Under reduced motion there is no start button, only the still.
  */
 import { finalState, scenes, type Scene, type SceneLayer } from '../lib/scenes';
-import { spritePaths } from '../lib/sprite';
+import { Raster, seeded } from '../lib/pixel';
+import { spritePaths, type Palette } from '../lib/sprite';
 
 const paths = (scene: Scene, grid: string[]) => spritePaths({ width: scene.width, height: scene.height, grid, palette: scene.palette });
 const startOf = (l: SceneLayer) => ({ f: 0, show: true, dx: 0, dy: 0, ...l.start });
+
+// The section's own night: pixel stars and a city skyline, drawn with the same pixel pipeline as
+// the scenes and tiled as CSS backgrounds, so each pixel stays square at any width.
+const svgUrl = (r: Raster, palette: Palette) => {
+  const body = spritePaths({ width: r.width, height: r.height, grid: r.grid(), palette })
+    .map(({ fill, d }) => `<path fill='${fill}' d='${d}'/>`)
+    .join('');
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${r.width} ${r.height}' shape-rendering='crispEdges'>${body}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+};
+
+const rand = seeded(2026);
+const stars = new Raster(64, 64);
+for (let i = 0; i < 18; i++) {
+  const x = Math.floor(rand() * 62) + 1;
+  const y = Math.floor(rand() * 62) + 1;
+  if (rand() < 0.25) stars.set(x, y, 'b').set(x - 1, y, 'd').set(x + 1, y, 'd').set(x, y - 1, 'd').set(x, y + 1, 'd');
+  else stars.set(x, y, rand() < 0.5 ? 'b' : 'd');
+}
+
+const skyline = new Raster(120, 40);
+for (let x = 0; x < 120; ) {
+  const w = Math.min(6 + Math.floor(rand() * 9), 120 - x);
+  const h = 10 + Math.floor(rand() * 26);
+  skyline.rect(x, 40 - h, w, h, 'k');
+  for (let wy = 40 - h + 2; wy < 38; wy += 3) for (let wx = x + 1; wx < x + w - 1; wx += 2) if (rand() < 0.28) skyline.set(wx, wy, rand() < 0.7 ? 'y' : 'p');
+  if (rand() < 0.25) skyline.rect(x + Math.floor(w / 2), 40 - h - 4, 1, 4, 'k');
+  x += w;
+}
+
+const moon = new Raster(12, 12).disc(6, 6, 5.6, 'm').set(4, 4, 'c').set(7, 7, 'c').set(5, 8, 'c').set(8, 3, 'c');
+
+const sky = {
+  '--stars': svgUrl(stars, { b: '#ffffff', d: '#9d8cff' }),
+  '--skyline': svgUrl(skyline, { k: '#0c0a24', y: '#ffd36b', p: '#ff7ab6' }),
+  '--moon': svgUrl(moon, { m: '#fff1c7', c: '#e6d29b' }),
+};
+const skyStyle = Object.entries(sky)
+  .map(([k, v]) => `${k}:${v}`)
+  .join(';');
 ---
 
-<section id="after-hours" class="after-hours wrap" aria-labelledby="after-hours-title" data-dwell="the after-hours reel">
-  <div class="section-head gel-coral">
+<section id="after-hours" class="after-hours" aria-labelledby="after-hours-title" data-dwell="the after-hours reel" style={skyStyle}>
+  <div class="moon" aria-hidden="true"></div>
+  <div class="wrap night">
+  <div class="section-head">
     <div>
       <p class="eyebrow">Off the clock</p>
       <h2 id="after-hours-title" class="display">After hours</h2>
@@ -82,6 +125,7 @@ const startOf = (l: SceneLayer) => ({ f: 0, show: true, dx: 0, dy: 0, ...l.start
       })
     }
   </ul>
+  </div>
 </section>
 
 <script>
@@ -189,8 +233,72 @@ const startOf = (l: SceneLayer) => ({ f: 0, show: true, dx: 0, dy: 0, ...l.start
 </script>
 
 <style>
+  /* A 16-bit night: banded sky, pixel stars, a moon, and the city asleep along the bottom.
+     It stays night in either house light; it is after hours, after all. */
   .after-hours {
-    padding-block: 88px 64px;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    color: #f2eeff;
+    background: linear-gradient(
+      to bottom,
+      #0a0820 0 22%,
+      #110d32 22% 42%,
+      #1a1245 42% 60%,
+      #251855 60% 76%,
+      #342064 76% 100%
+    );
+  }
+
+  .after-hours::before,
+  .after-hours::after {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .after-hours::before {
+    background: var(--stars) 0 0 / 384px 384px;
+    mask-image: linear-gradient(to bottom, #000 40%, transparent 85%);
+  }
+
+  .after-hours::after {
+    inset: auto 0 0;
+    height: 240px;
+    background: var(--skyline) 0 100% / 720px 240px repeat-x;
+  }
+
+  .moon {
+    position: absolute;
+    z-index: -1;
+    top: 24px;
+    right: max(20px, calc(50% - 700px));
+    width: 84px;
+    height: 84px;
+    background: var(--moon) center / contain no-repeat;
+    filter: drop-shadow(0 0 24px rgba(255, 241, 199, 0.45));
+  }
+
+  .night {
+    padding-block: 88px 200px;
+  }
+
+  .after-hours .section-head h2 {
+    font-family: var(--font-game);
+    font-weight: 400;
+    color: #ffffff;
+    text-shadow: 4px 4px 0 #ff5fa2;
+  }
+
+  .after-hours .section-head p,
+  .after-hours .eyebrow {
+    color: #cbc2f5;
+  }
+
+  .after-hours .section-head::before {
+    display: none;
   }
 
   .reels {
@@ -202,20 +310,24 @@ const startOf = (l: SceneLayer) => ({ f: 0, show: true, dx: 0, dy: 0, ...l.start
     list-style: none;
   }
 
+  /* Each scene is a lit window in the night: a deep panel with a hard pixel shadow. */
   .reel {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    border: 3px solid #6b5bd6;
+    border-radius: 4px;
+    background: rgba(13, 10, 38, 0.9);
+    box-shadow: 6px 6px 0 #05040f;
   }
 
   /* The scene sits in a dark bezel, like the arcade cabinets, with a pixel shadow under it. */
   .screen {
     position: relative;
     margin: 10px 10px 0;
-    padding: 6px;
-    border-radius: 10px;
-    background: #0b1416;
-    box-shadow: inset 0 0 0 2px #26363c;
+    padding: 4px;
+    border-radius: 2px;
+    background: #05040f;
   }
 
   .screen svg {
@@ -223,7 +335,6 @@ const startOf = (l: SceneLayer) => ({ f: 0, show: true, dx: 0, dy: 0, ...l.start
     width: 100%;
     height: auto;
     aspect-ratio: 16 / 9;
-    border-radius: 6px;
     image-rendering: pixelated;
   }
 
@@ -252,22 +363,39 @@ const startOf = (l: SceneLayer) => ({ f: 0, show: true, dx: 0, dy: 0, ...l.start
 
   .reel-body h3 {
     margin: 0;
-    font: 500 24px/1.2 var(--font-display);
+    font: 400 24px/1.2 var(--font-game);
+    color: #ffffff;
   }
 
   .reel-body p {
     margin: 0 0 8px;
-    color: var(--muted);
+    color: #cbc2f5;
     font-size: 16px;
   }
 
+  /* A chunky pixel button that presses down when you hit it. */
   .play {
     margin-top: auto;
     min-height: 44px;
     padding: 6px 18px;
+    border: 3px solid #05040f;
+    border-radius: 0;
+    background: #ffd36b;
+    color: #1a1033;
+    box-shadow: 4px 4px 0 #05040f;
     font: 400 15px/1 var(--font-game);
     letter-spacing: 0.06em;
     text-transform: uppercase;
+  }
+
+  .play:hover {
+    background: #ffe08f;
+    color: #1a1033;
+  }
+
+  .play:active {
+    translate: 2px 2px;
+    box-shadow: 2px 2px 0 #05040f;
   }
 
   .play[hidden] {
@@ -276,7 +404,29 @@ const startOf = (l: SceneLayer) => ({ f: 0, show: true, dx: 0, dy: 0, ...l.start
 
   .play:disabled {
     cursor: default;
-    opacity: 0.6;
+    opacity: 0.7;
+  }
+
+  .play:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 720px) {
+    .moon {
+      top: 28px;
+      width: 56px;
+      height: 56px;
+    }
+
+    .night {
+      padding-block: 64px 170px;
+    }
+
+    .after-hours::after {
+      height: 180px;
+      background-size: 540px 180px;
+    }
   }
 
   @media (max-width: 960px) {

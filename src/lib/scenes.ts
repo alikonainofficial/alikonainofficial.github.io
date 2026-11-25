@@ -82,44 +82,23 @@ const ARMS_CHEST = [
   '..KKKooooooooooKKK..',
 ];
 
-/** Both arms up: the torso only. The arms themselves are drawn outside the box by armsUp(). */
-const ARMS_UP = [
-  '..KAAOOOSSSSOOOAAK..',
-  '...KKOlOOOOOOOOKK...',
-  '....KOlOOOOOOOoK....',
-  '....KOOOOOOOOOoK....',
-  '....KooooooooooK....',
-];
-
-/** The viewer's left arm up (his right), the other still at his side. */
+/** The viewer's right arm up (his left), toward the volunteer; the other still at his side. */
 const ARM_RAISED = [
   '..KAAOOOSSSSOOOAAK..',
-  '...KKOlOOOOOOOOAAAK.',
-  '....KOlOOOOOOOoKaAK.',
-  '....KOOOOOOOOOoKaAK.',
-  '....KooooooooooKSSK.',
+  '.KAAAOlOOOOOOOOKK...',
+  '.KAaKOlOOOOOOOoK....',
+  '.KAaKOOOOOOOOOoK....',
+  '.KSSKooooooooooK....',
 ];
 
 function body(arms: readonly string[], eyesShut = false): string[] {
   const grid = [...ali.grid.slice(0, 17), ...arms, ...ali.grid.slice(22)];
-  // With the hands away from his sides, the hip row loses the outline that framed them.
-  if (arms === ARMS_UP) grid[22] = '....KPPPPPPPPPPK....';
   if (eyesShut) EYE_ROWS.forEach((row, i) => (grid[row] = overlay(grid[row]!, lids.grid[i]!)));
   return grid;
 }
 
 function overlay(base: string, top: string): string {
   return [...base].map((c, i) => (top[i] && top[i] !== '.' ? top[i] : c)).join('');
-}
-
-function armsUp(r: Raster, x: number, y: number, swap: Record<string, string> = {}): void {
-  const A = swap.A ?? 'A';
-  const a = swap.a ?? 'a';
-  const S = swap.S ?? 'S';
-  r.rect(x - 2, y - 4, 1, 21, 'K').rect(x - 1, y - 4, 1, 21, A).rect(x, y - 4, 1, 20, a);
-  r.rect(x + 21, y - 4, 1, 21, 'K').rect(x + 20, y - 4, 1, 21, A).rect(x + 19, y - 4, 1, 20, a);
-  r.rect(x + 1, y + 15, 2, 3, A).rect(x + 17, y + 15, 2, 3, A);
-  r.rect(x - 2, y - 6, 3, 2, S).rect(x + 19, y - 6, 3, 2, S);
 }
 
 /* ----------------------------------------------------------------------------------------------
@@ -181,7 +160,7 @@ function nightRide(): Scene {
     id: 'night-ride',
     title: 'The night ride',
     caption: 'My Kawasaki Z1000, an empty road and the city asleep.',
-    label: 'Pixel-art Ali riding a lime-green Kawasaki Z1000 along a city road at night, under streetlights and a full moon.',
+    label: 'Pixel-art Ali riding his black Kawasaki Z1000 along a city road at night, under streetlights and a full moon.',
     width: W,
     height: H,
     palette: {
@@ -221,9 +200,9 @@ const BIKE_PALETTE: Palette = {
   T: '#0f0f13',
   M: '#a19d93',
   m: '#5d5b56',
-  G: '#6cc02c',
-  v: '#3f7f1a',
-  V: '#a6e25c',
+  G: '#1f1f26',
+  v: '#0c0c10',
+  V: '#8a93a6',
   F: '#202026',
   Z: '#121216',
   N: '#33333b',
@@ -275,6 +254,8 @@ function drawBike(ox: number, oy: number, f: number): string[] {
   r.poly([P(24, 12 + b), P(29, 12 + b), P(28, 17 + b), P(24, 17 + b)], 'G').line(...P(24, 16 + b), ...P(28, 16 + b), 'v');
   r.line(...P(29, 9 + b), ...P(31, 22), 'U', 2);
   r.poly([P(28, 6 + b), P(34, 7 + b), P(34, 11 + b), P(29, 11 + b)], 'G').rect(...P(33, 8 + b), 2, 2, 'I');
+  // Black paint needs a rim of light to read at night: catch the edges of the cowl, tail and shroud.
+  r.line(...P(28, 6 + b), ...P(33, 7 + b), 'V').line(...P(1, 10 + b), ...P(6, 10 + b), 'V').line(...P(24, 12 + b), ...P(28, 12 + b), 'V');
   r.line(...P(25, 7 + b), ...P(29, 7 + b), 'F');
 
   // Ali, tucked in behind the screen: helmet, jacket, jeans and boots.
@@ -282,19 +263,20 @@ function drawBike(ox: number, oy: number, f: number): string[] {
   r.poly([P(10, 10 + b), P(14, 4 + b), P(21, 3 + b), P(23, 6 + b), P(15, 12 + b)], 'k').line(...P(11, 10 + b), ...P(15, 12 + b), 'j');
   r.line(...P(20, 5 + b), ...P(26, 8 + b), 'k', 2).rect(...P(26, 7 + b), 2, 2, 'i');
   r.disc(...P(22.5, 2.5 + b), 3.3, 'J');
-  r.rect(...P(20, -1 + b), 4, 1, 'G').rect(...P(23, 2 + b), 3, 2, 'C').set(...P(25, 2 + b), 'c');
+  r.rect(...P(20, -1 + b), 4, 1, 'V').rect(...P(23, 2 + b), 3, 2, 'C').set(...P(25, 2 + b), 'c');
   return r.grid();
 }
 
 /* ----------------------------------------------------------------------------------------------
- * The gym: three overhead presses and a new PR.
+ * The gym: three barbell curls and a new PR, in a bright yellow gym that doesn't
+ * borrow the club's teal.
  * -------------------------------------------------------------------------------------------- */
 
 function gym(): Scene {
   const x = 38;
   const y = 19;
   const room = new Raster(W, H);
-  room.rect(0, 0, W, 46, '1').rect(0, 30, W, 16, '2').rect(0, 30, W, 1, '3');
+  room.rect(0, 0, W, 46, '1').rect(0, 30, W, 16, '2').rect(0, 29, W, 2, '3');
   room.rect(0, 46, W, H - 46, '4');
   for (let fx = 0; fx < W; fx += 12) room.rect(fx, 46, 1, H - 46, '5');
   room.rect(0, 46, W, 1, '5');
@@ -308,77 +290,72 @@ function gym(): Scene {
     room.rect(dx, 35, 1, 3, 'D').rect(dx + 1, 36, 2, 1, 'X').rect(dx + 3, 35, 1, 3, 'D');
   }
 
-  const bar = (r: Raster, row: number) => {
-    const by = y + row;
-    r.rect(x - 15, by, 50, 1, 'b');
-    for (const px of [x - 13, x + 30]) r.rect(px, by - 5, 3, 11, 'p').rect(px, by - 5, 3, 1, 'q').rect(px, by + 5, 3, 1, 'q');
-    r.rect(x - 10, by - 1, 1, 3, 'X').rect(x + 29, by - 1, 1, 3, 'X');
-  };
-
-  const pose = (kind: 'down' | 'chest' | 'up', shut: boolean, sweat = false) => {
+  // Curls keep his arms their real length: the bar travels from his hands at row 21 to his chest at row 18.
+  const pose = (curled: boolean, shut: boolean, sweat = false) => {
     const r = new Raster(W, H);
-    if (kind === 'up') armsUp(r, x, y);
-    r.blit(body(kind === 'down' ? ARMS_DOWN : kind === 'chest' ? ARMS_CHEST : ARMS_UP, shut), x, y);
-    bar(r, kind === 'down' ? 21 : kind === 'chest' ? 18 : -5);
-    if (kind === 'up') r.rect(x - 2, y - 6, 3, 2, 'S').rect(x + 19, y - 6, 3, 2, 'S');
+    r.blit(body(curled ? ARMS_CHEST : ARMS_DOWN, shut), x, y);
+    const row = curled ? 18 : 21;
+    const by = y + row;
+    r.rect(x - 9, by, 38, 1, 'b');
+    for (const px of [x - 8, x + 25]) r.rect(px, by - 4, 3, 9, 'p').rect(px, by - 4, 3, 1, 'q').rect(px, by + 4, 3, 1, 'q');
+    r.rect(x - 5, by - 1, 1, 3, 'X').rect(x + 24, by - 1, 1, 3, 'X');
+    // Hands back on top of the bar.
+    r.rect(x + 2, by, 2, 1, 'S').rect(x + 16, by, 2, 1, 'S');
     if (sweat) r.set(x + 19, y + 5, 'x').rect(x + 19, y + 6, 1, 2, 'x');
     return r.grid();
   };
 
   const spark = new Raster(W, H);
   for (const [sx, sy] of [
-    [x - 22, y - 9],
-    [x + 40, y - 3],
+    [x - 6, y + 2],
+    [x + 26, y + 6],
   ] as const) {
     spark.rect(sx, sy - 2, 1, 5, '*').rect(sx - 2, sy, 5, 1, '*');
   }
 
   const DOWN = 0;
-  const CHEST = 1;
-  const UP_STRAIN = 2;
-  const UP_PROUD = 3;
+  const CURL = 1;
+  const PROUD = 2;
   const steps: Step[] = [{ at: 0, set: { lifter: { f: DOWN }, spark: { show: false } }, hud: 'SET 1 · REP 0' }];
   let t = 300;
   for (let rep = 1; rep <= 3; rep++) {
-    steps.push({ at: t, set: { lifter: { f: CHEST } } });
-    steps.push({ at: t + 350, set: { lifter: { f: UP_STRAIN } }, hud: `SET 1 · REP ${rep}` });
+    steps.push({ at: t, set: { lifter: { f: CURL } }, hud: `SET 1 · REP ${rep}` });
     if (rep < 3) {
-      steps.push({ at: t + 850, set: { lifter: { f: CHEST } } });
-      steps.push({ at: t + 1150, set: { lifter: { f: DOWN } } });
-      t += 1400;
-    } else t += 850;
+      steps.push({ at: t + 650, set: { lifter: { f: DOWN } } });
+      t += 1150;
+    } else t += 700;
   }
-  steps.push({ at: t + 200, set: { lifter: { f: UP_PROUD }, spark: { show: true } }, hud: 'NEW PR!' });
+  steps.push({ at: t, set: { lifter: { f: PROUD }, spark: { show: true } }, hud: 'NEW PR!' });
 
   return {
     id: 'gym',
     title: 'Every day, no excuses',
     caption: 'The gym, every single day. The barbell is the only thing I never debug.',
-    label: 'Pixel-art Ali in his olive gym tank, pressing a loaded barbell overhead in a gym at night.',
+    label: 'Pixel-art Ali in his olive gym tank, curling a loaded barbell in a bright yellow gym.',
     width: W,
     height: H,
     palette: {
       ...ali.palette,
-      '1': '#0f262c',
-      '2': '#14323a',
-      '3': '#1f4650',
-      '4': '#191b21',
-      '5': '#23262e',
-      m: '#183843',
-      M: '#24505c',
-      r: '#3c4250',
-      R: '#59606f',
-      D: '#24242b',
-      X: '#8f8a80',
-      b: '#c9c4b8',
-      p: '#141418',
-      q: '#e2bb6e',
-      x: '#9fd3f0',
-      '*': '#ff7a59',
+      '1': '#ffd447',
+      '2': '#ffb72e',
+      '3': '#ff6b3d',
+      '4': '#3d3566',
+      '5': '#4d4480',
+      m: '#bfe8f5',
+      M: '#ffffff',
+      r: '#2b3350',
+      R: '#4a5680',
+      D: '#22263a',
+      X: '#9aa3b8',
+      b: '#e9e5da',
+      p: '#1d1f2e',
+      q: '#ff4f6d',
+      x: '#2fa8e8',
+      '*': '#ff2f7a',
     },
     layers: [
       { name: 'room', frames: [room.grid()] },
-      { name: 'lifter', frames: [pose('down', false), pose('chest', false), pose('up', true, true), pose('up', false)] },
+      { name: 'lifter', frames: [pose(false, false), pose(true, true, true), pose(true, false)] },
       { name: 'spark', frames: [spark.grid()] },
     ],
     steps,
@@ -387,33 +364,61 @@ function gym(): Scene {
 }
 
 /* ----------------------------------------------------------------------------------------------
- * The volunteer: a snap, a sway, and the volunteer finds out they can play the sax.
+ * The show in my head: a snap, a sway, and a girl from the audience finds out she can play the sax.
  * -------------------------------------------------------------------------------------------- */
 
-/** The volunteer wears Ali's build in their own colours: copper hair, a blue hoodie, grey jeans. */
-const VOLUNTEER: Record<string, string> = {
-  H: '1',
-  h: '2',
-  d: '3',
-  B: '3',
-  S: '4',
-  s: '5',
-  A: '4',
-  a: '5',
-  O: '6',
-  o: '7',
-  l: '8',
-  P: '9',
-  Y: '9',
-};
+/** The volunteer: long hair, a pink bow, a lavender dress. Same build and outline as Ali's sprite. */
+const GIRL = [
+  '......KKKKKKKK.KKK..',
+  '....KKqqqqqqqqKRRRK.',
+  '...KqqqqqQQQqqKRKRK.',
+  '..KqqqqQQqqqqqKRRRK.',
+  '..KqqqqqqqqqqqqKKK..',
+  '.KqqqqqqqqqqqqqqqqK.',
+  '.KqqqqqqqqqqqqqqqqK.',
+  '.KqqqqqqqqqqqqqqqqK.',
+  '.KqqxxxxxxxxxxxxqqK.',
+  '.KqqjjjjjjjjjjjjqqK.',
+  '.KqjjKKjjjjjjKKjjqK.',
+  '.KqjjEWjjjjjjEWjjqK.',
+  '.KqjjEEjjjjjjEEjjqK.',
+  '.KqjppjjjmmjjjppjqK.',
+  '.KqqKjjjjjjjjjjKqqK.',
+  '.KqqqKKjjjjjjKKqqqK.',
+  '.KqqqKVVjjjjVVKqqqK.',
+  '.KqqKVVVVjjVVVVKqqK.',
+  '..KjjVVVVVVVVVVjjK..',
+  '..KjKVVViVVVVVVKjK..',
+  '..KjKVVVVVVVVVVKjK..',
+  '..KJKvVVVVVVVVvKJK..',
+  '...KvvVVVVVVVVvvK...',
+  '....KKKKKKKKKKKK....',
+  '......KjjK.KjjK.....',
+  '.....KyyyyKyyyyK....',
+  '.....KKKKKKKKKKK....',
+];
+
+/** Her torso with the arms in front, for holding the sax. The arms are drawn on afterwards. */
+const GIRL_SAX_ARMS = ['...KKVVVVVVVVVVKK...', '....KVVViVVVVVVK....', '....KVVVVVVVVVVK....', '...KvVVVVVVVVVVvK...'];
+
+function girl(pose: 'idle' | 'trance' | 'sax'): string[] {
+  const g = [...GIRL];
+  if (pose !== 'idle') {
+    // Eyes closed: two happy curves where the eyes were.
+    g[11] = g[11]!.replace(/EW/g, 'jj');
+    g[12] = g[12]!.replace(/EE/g, 'KK');
+  }
+  if (pose === 'sax') g.splice(18, 4, ...GIRL_SAX_ARMS);
+  return g;
+}
 
 const SAX = ['......kk.', '.....GG..', '.....GG..', '....GGg..', '....GGg..', '...GGg...', '...GGg...', 'GG.GGg...', 'GGGGGg...', '.GGGg....', '..gg.....'];
 
 const NOTE = ['..nn', '..n.', '..n.', 'nnn.', 'nn..'];
 
-function volunteerShow(): Scene {
+function showInMyHead(): Scene {
   const hx = 16;
-  const vx = 58;
+  const vx = 60;
   const y = 21;
 
   const stage = new Raster(W, H);
@@ -439,25 +444,30 @@ function volunteerShow(): Scene {
 
   const host = (raised: boolean) => {
     const r = new Raster(W, H);
-    if (raised) r.line(hx + 1, y + 17, hx - 2, y + 9, 'A', 2).rect(hx - 3, y + 7, 2, 2, 'S');
+    if (raised) r.line(hx + 18, y + 17, hx + 21, y + 9, 'A', 2).rect(hx + 21, y + 7, 2, 2, 'S');
     r.blit(body(raised ? ARM_RAISED : ARMS_DOWN), hx, y);
     r.blit(hat.grid, hx, y - hat.height, { K: 'Z', B: 'b' });
     return r.grid();
   };
 
-  const volunteer = (pose: 'down' | 'sax', shut: boolean) => {
+  const volunteer = (pose: 'idle' | 'trance' | 'sax') => {
     const r = new Raster(W, H);
-    r.blit(body(pose === 'sax' ? ARMS_CHEST : ARMS_DOWN, shut), vx, y, VOLUNTEER);
-    if (pose === 'sax') r.blit(SAX, vx + 4, y + 14);
+    r.blit(girl(pose), vx, y);
+    if (pose === 'sax') {
+      r.blit(SAX, vx + 4, y + 13);
+      // Arms from the shoulders to the keys: one hand high on the neck, one low on the body.
+      r.line(vx + 16, y + 18, vx + 12, y + 16, 'j').rect(vx + 10, y + 15, 2, 2, 'j');
+      r.line(vx + 3, y + 18, vx + 6, y + 21, 'j').rect(vx + 6, y + 21, 2, 2, 'j');
+    }
     return r.grid();
   };
 
   const spark = new Raster(W, H);
-  spark.rect(hx - 5, y + 2, 1, 5, '*').rect(hx - 7, y + 4, 5, 1, '*').set(hx - 8, y + 1, '*').set(hx - 1, y + 1, '*');
+  spark.rect(hx + 25, y + 2, 1, 5, '*').rect(hx + 23, y + 4, 5, 1, '*').set(hx + 22, y + 1, '*').set(hx + 28, y + 1, '*');
 
   const notes = [0, 1, 2].map((f) => {
     const r = new Raster(W, H);
-    r.blit(NOTE, vx - 4, y + 10 - f * 3).blit(NOTE, vx - 9, y + 2 - f * 2).blit(NOTE, vx + 21, y + 6 - f * 3);
+    r.blit(NOTE, vx - 4, y + 12 - f * 3).blit(NOTE, vx - 2, y + 2 - f * 2).blit(NOTE, vx + 21, y + 6 - f * 3);
     return r.grid();
   });
 
@@ -474,9 +484,10 @@ function volunteerShow(): Scene {
 
   return {
     id: 'volunteer',
-    title: 'A volunteer from the audience',
-    caption: 'Beginner mentalism and stage hypnosis. Every volunteer leaves with a new skill.',
-    label: 'Pixel-art Ali in a top hat on a curtained stage, arm raised toward a smiling volunteer who is playing a saxophone, with music notes in the air.',
+    title: 'The show in my head',
+    caption: "A beginner's interest in mentalism and hypnosis. I've never done it on a stage; this is the show as I picture it.",
+    label:
+      'Pixel-art Ali in a top hat on an imagined stage, raising a hand toward a smiling girl from the audience who has her eyes closed and is happily playing a saxophone, with music notes in the air.',
     width: W,
     height: H,
     palette: {
@@ -497,22 +508,25 @@ function volunteerShow(): Scene {
       b: '#d9b36c',
       n: '#f3efe6',
       '*': '#ff7a59',
-      '1': '#b5632d',
-      '2': '#d98a4e',
-      '3': '#6e3818',
-      '4': '#c68b62',
-      '5': '#a9714d',
-      '6': '#4f78b0',
-      '7': '#3b5d8c',
-      '8': '#7aa0d4',
-      '9': '#3a3640',
+      q: '#4b2c2a',
+      Q: '#8a5a4e',
+      x: '#2e1a1a',
+      R: '#ff6f9f',
+      j: '#f5cfb0',
+      J: '#dba98a',
+      p: '#ff9db5',
+      m: '#c2546a',
+      V: '#a98bff',
+      v: '#7f63d6',
+      i: '#cbb8ff',
+      y: '#ff6f9f',
     },
     layers: [
       { name: 'stage', frames: [stage.grid()] },
       { name: 'light', frames: [light.grid()] },
       { name: 'host', frames: [host(false), host(true)] },
       { name: 'spark', frames: [spark.grid()] },
-      { name: 'volunteer', frames: [volunteer('down', false), volunteer('down', true), volunteer('sax', true)] },
+      { name: 'volunteer', frames: [volunteer('idle'), volunteer('trance'), volunteer('sax')] },
       { name: 'notes', frames: notes, fps: 4 },
     ],
     steps,
@@ -520,4 +534,4 @@ function volunteerShow(): Scene {
   };
 }
 
-export const scenes: Scene[] = [nightRide(), gym(), volunteerShow()];
+export const scenes: Scene[] = [nightRide(), gym(), showInMyHead()];
