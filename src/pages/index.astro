@@ -12,11 +12,12 @@ import Arcade from '../components/Arcade.astro';
 import AfterHours from '../components/AfterHours.astro';
 import Finale from '../components/Finale.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import { seamStyle } from '../lib/seams';
 ---
 
 <Base>
   <SiteHeader />
-  <main id="main">
+  <main id="main" data-worlds style={seamStyle()}>
     <Stage />
     <Work />
     <Story />

@@ -46,6 +46,10 @@
   --font-label: 'Silkscreen', 'Pixelify Sans Variable', 'Courier New', monospace;
   --font-sign: 'Bungee Shade', Impact, 'Arial Black', sans-serif;
 
+  /* The seams between the home page's worlds. src/lib/seams.ts uses the same numbers: change them together. */
+  --seam: 120px;
+  --seam-ramp: 184px;
+
   --page: 1240px;
   --gutter: max(16px, min(4vw, 32px));
   --radius: 18px;
@@ -428,6 +432,63 @@ p {
 
 sup {
   line-height: 0;
+}
+
+/*
+ * Seams. On the home page each world reaches --seam up over the one before it and fades its own
+ * top edge in, so neighbouring worlds cross-fade with no line between them. A section picks how it
+ * fades with data-seam: halftone (screentone dots) or dither (pixels); the default is an eased fade.
+ * Its extra top padding cancels the overlap, so nothing on the page moves.
+ */
+main[data-worlds] > section ~ section,
+main[data-worlds] ~ .site-footer {
+  position: relative;
+  margin-top: calc(-1 * var(--seam));
+  padding-top: var(--seam);
+  /* Links to a section land where it used to begin, not in its fade. */
+  scroll-margin-top: calc(-1 * var(--seam));
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgba(0, 0, 0, 0.04) calc(var(--seam-ramp) * 0.15),
+    rgba(0, 0, 0, 0.16) calc(var(--seam-ramp) * 0.3),
+    rgba(0, 0, 0, 0.36) calc(var(--seam-ramp) * 0.45),
+    rgba(0, 0, 0, 0.62) calc(var(--seam-ramp) * 0.6),
+    rgba(0, 0, 0, 0.84) calc(var(--seam-ramp) * 0.75),
+    rgba(0, 0, 0, 0.96) calc(var(--seam-ramp) * 0.88),
+    #000 var(--seam-ramp)
+  );
+}
+
+/* The footer fades in over the curtain call too, so it loses its rule and makes room for the fade. */
+main[data-worlds] ~ .site-footer {
+  border-top: 0;
+}
+
+main[data-worlds] ~ .site-footer .footer-small {
+  padding-top: 72px;
+}
+
+main[data-worlds] > section[data-seam='halftone'] {
+  mask-image: var(--seam-halftone), linear-gradient(#000 0 0);
+  mask-size:
+    16px var(--seam-ramp),
+    100% 100%;
+  mask-position:
+    0 0,
+    0 var(--seam-ramp);
+  mask-repeat: repeat-x, no-repeat;
+}
+
+main[data-worlds] > section[data-seam='dither'] {
+  mask-image: var(--seam-dither), linear-gradient(#000 0 0);
+  mask-size:
+    32px var(--seam-ramp),
+    100% 100%;
+  mask-position:
+    0 0,
+    0 var(--seam-ramp);
+  mask-repeat: repeat-x, no-repeat;
 }
 
 /*

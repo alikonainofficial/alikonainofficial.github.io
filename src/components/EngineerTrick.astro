@@ -149,9 +149,10 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
     pointer-events: none;
   }
 
+  /* The cord starts up in the seam, so the lamp hangs down out of the section above. */
   .cord {
     width: 2px;
-    height: 56px;
+    height: calc(var(--seam) + 40px);
     background: #050c08;
   }
 
@@ -175,7 +176,7 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
   }
 
   .inner {
-    padding-block: 140px 112px;
+    padding-block: 140px 136px;
     display: flex;
     flex-direction: column;
     gap: 28px;

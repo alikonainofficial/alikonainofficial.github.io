@@ -14,7 +14,7 @@ const imageFor = (slug: string) => Object.entries(files).find(([path]) => path.s
 const first = games[0]!;
 ---
 
-<section id="player-one" class="player-one" aria-labelledby="player-one-title" data-dwell="player one's shelf" style={`--accent:${first.accent}`} data-console>
+<section id="player-one" class="player-one" data-seam="halftone" aria-labelledby="player-one-title" data-dwell="player one's shelf" style={`--accent:${first.accent}`} data-console>
   <div class="art-stack" aria-hidden="true">
     {
       games.map((g, i) => {
@@ -145,7 +145,7 @@ const first = games[0]!;
     isolation: isolate;
     overflow: hidden;
     display: flex;
-    min-height: clamp(600px, 92svh, 820px);
+    min-height: calc(clamp(600px, 92svh, 820px) + var(--seam));
     background: #05070a;
     color: #ffffff;
   }
@@ -195,7 +195,7 @@ const first = games[0]!;
     display: flex;
     flex-direction: column;
     width: 100%;
-    padding-block: 26px 48px;
+    padding-block: 72px 136px;
   }
 
   .status {
@@ -328,7 +328,7 @@ const first = games[0]!;
 
   @media (max-width: 720px) {
     .player-one {
-      min-height: 640px;
+      min-height: calc(640px + var(--seam));
     }
 
     .intro {

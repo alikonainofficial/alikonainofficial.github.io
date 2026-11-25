@@ -8,7 +8,7 @@ import TopFive from './TopFive.astro';
 import { anime } from '../lib/favourites';
 ---
 
-<section id="late-show" class="late-show" aria-labelledby="late-show-title" data-dwell="the late show">
+<section id="late-show" class="late-show" data-seam="halftone" aria-labelledby="late-show-title" data-dwell="the late show">
   <div class="wrap page">
     <div class="head" data-rise>
       <div>
@@ -31,7 +31,6 @@ import { anime } from '../lib/favourites';
     overflow: hidden;
     background: var(--paper);
     color: var(--ink);
-    border-block: 6px solid var(--ink);
   }
 
   /* Halftone screentone, thick at the edges of the page and gone in the middle. */
@@ -46,7 +45,7 @@ import { anime } from '../lib/favourites';
   }
 
   .page {
-    padding-block: 72px 96px;
+    padding-block: 72px 136px;
   }
 
   .head {
@@ -104,7 +103,7 @@ import { anime } from '../lib/favourites';
 
   @media (max-width: 720px) {
     .page {
-      padding-block: 56px 72px;
+      padding-block: 64px 136px;
     }
 
     .head {

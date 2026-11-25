@@ -52,7 +52,7 @@ const skyStyle = Object.entries(sky)
   .join(';');
 ---
 
-<section id="after-hours" class="after-hours" aria-labelledby="after-hours-title" data-dwell="the after-hours reel" style={skyStyle}>
+<section id="after-hours" class="after-hours" data-seam="dither" aria-labelledby="after-hours-title" data-dwell="the after-hours reel" style={skyStyle}>
   <div class="moon" aria-hidden="true"></div>
   <div class="wrap night">
   <div class="section-head" data-rise>
@@ -273,7 +273,7 @@ const skyStyle = Object.entries(sky)
   .moon {
     position: absolute;
     z-index: -1;
-    top: 24px;
+    top: calc(var(--seam) + 24px);
     right: max(20px, calc(50% - 700px));
     width: 84px;
     height: 84px;
@@ -414,7 +414,7 @@ const skyStyle = Object.entries(sky)
 
   @media (max-width: 720px) {
     .moon {
-      top: 28px;
+      top: calc(var(--seam) + 28px);
       width: 56px;
       height: 56px;
     }

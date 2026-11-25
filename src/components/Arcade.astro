@@ -40,7 +40,7 @@ const carpet = `<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'
 const carpetUrl = `url("data:image/svg+xml,${encodeURIComponent(carpet.replace(/\n/g, ''))}")`;
 ---
 
-<section id="arcade" class="arcade" aria-labelledby="arcade-title" data-dwell="the arcade" style={`--carpet:${carpetUrl}`}>
+<section id="arcade" class="arcade" data-seam="dither" aria-labelledby="arcade-title" data-dwell="the arcade" style={`--carpet:${carpetUrl}`}>
   <div class="wrap inner">
     <div class="section-head gel-cyan" data-rise>
       <div class="arcade-title">
@@ -101,7 +101,7 @@ const carpetUrl = `url("data:image/svg+xml,${encodeURIComponent(carpet.replace(/
   }
 
   .inner {
-    padding-block: 88px;
+    padding-block: 88px 136px;
   }
 
   .arcade :global(.section-head h2) {
