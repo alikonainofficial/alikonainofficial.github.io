@@ -10,8 +10,6 @@ export interface Snapshot {
   solved: { all: number; easy: number; medium: number; hard: number };
   /** Unix seconds at UTC midnight → accepted submissions that day. */
   calendar: Record<string, number>;
-  tags: { name: string; solved: number }[];
-  recent: { title: string; slug: string; at: number }[];
 }
 
 export interface Day {

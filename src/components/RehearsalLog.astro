@@ -6,6 +6,8 @@
 import NewTabLink from './NewTabLink.astro';
 import snapshot from '../data/leetcode.json';
 import { hardShare, practice, shortDate, type Snapshot } from '../lib/leetcode';
+import { seeded } from '../lib/pixel';
+import { grain, styleVars } from '../lib/textures';
 
 const data = snapshot as Snapshot;
 const updated = new Date(data.fetchedAt);
@@ -17,12 +19,37 @@ const levels = [
   { key: 'medium', label: 'Medium', n: solved.medium },
   { key: 'hard', label: 'Hard', n: solved.hard },
 ] as const;
-const topics = data.tags.slice(0, 6);
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+// The longest run, chalked up as tally marks: four strokes and a bar through them for each five.
+const rand = seeded(p.longestRun * 7 + 1);
+const jitter = (n: number) => (rand() - 0.5) * n;
+const MAX_MARKS = 60;
+const marks = Math.min(p.longestRun, MAX_MARKS);
+const tally = Array.from({ length: Math.ceil(marks / 5) }, (_, g) => {
+  const count = Math.min(5, marks - g * 5);
+  const strokes = Array.from({ length: Math.min(count, 4) }, (_, i) => {
+    const x = 6 + i * 8 + jitter(2);
+    return `M${x.toFixed(1)} ${(4 + jitter(3)).toFixed(1)} L${(x + jitter(3)).toFixed(1)} ${(34 + jitter(3)).toFixed(1)}`;
+  });
+  if (count === 5) strokes.push(`M${(1 + jitter(2)).toFixed(1)} ${(27 + jitter(3)).toFixed(1)} L${(37 + jitter(2)).toFixed(1)} ${(10 + jitter(3)).toFixed(1)}`);
+  return strokes.join(' ');
+});
+
+const board = styleVars({
+  '--dust': grain({ frequency: 0.95, octaves: 1, tone: 'light', amount: 0.05, size: 180, seed: 8 }),
+});
 ---
 
-<section id="rehearsal" class="rehearsal wrap" aria-labelledby="rehearsal-title" data-dwell="the rehearsal log">
-  <div class="section-head gel-amber">
+<section id="rehearsal" class="rehearsal" aria-labelledby="rehearsal-title" data-dwell="the rehearsal log" style={board}>
+  <svg class="defs" aria-hidden="true" width="0" height="0">
+    <filter id="chalk" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n" />
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" />
+    </filter>
+  </svg>
+  <div class="wrap board">
+  <div class="section-head gel-amber" data-rise>
     <div>
       <p class="eyebrow">Backstage</p>
       <h2 id="rehearsal-title" class="display">The rehearsal log</h2>
@@ -30,7 +57,7 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
     <p>A trick only looks easy after the hundredth run-through. This is where I run through algorithms, on LeetCode.</p>
   </div>
 
-  <div class="log panel">
+  <div class="log" data-rise>
     <div class="tally">
       <p class="big"><span class="num">{solved.all}</span> problems solved</p>
       <p class="share">{hardShare(solved)}% of them Medium or Hard</p>
@@ -48,11 +75,24 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
           ))
         }
       </ul>
+
+      <figure class="run">
+        <div class="marks" role="img" aria-label={`Tally marks for a ${p.longestRun}-day run`}>
+          {
+            tally.map((d) => (
+              <svg viewBox="0 0 40 38" aria-hidden="true">
+                <path d={d} />
+              </svg>
+            ))
+          }
+        </div>
+        <figcaption>Longest run: {plural(p.longestRun, 'day')} in a row.</figcaption>
+      </figure>
     </div>
 
     <figure class="calendar">
       <figcaption>
-        Active on <strong>{p.activeDays}</strong> of the last {p.spanDays} days, since {shortDate(p.since)}. Longest run: {plural(p.longestRun, 'day')}.
+        Active on <strong>{p.activeDays}</strong> of the last {p.spanDays} days, since {shortDate(p.since)}.
       </figcaption>
       <div class="cal-scroll">
         <div class="cal" style={`--weeks:${p.weeks.length}`}>
@@ -75,42 +115,60 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
       </div>
     </figure>
 
-    <div class="recent">
-      <h3 class="eyebrow">Latest run-throughs</h3>
-      <ol>
-        {
-          data.recent.map((r) => (
-            <li>
-              <NewTabLink href={`https://leetcode.com/problems/${r.slug}/`}>{r.title}</NewTabLink>
-              <span class="when">{shortDate(r.at)}</span>
-            </li>
-          ))
-        }
-      </ol>
-    </div>
-
-    <div class="topics">
-      <h3 class="eyebrow">Most rehearsed</h3>
-      <ul class="chips">
-        {
-          topics.map((t) => (
-            <li>
-              {t.name} <span class="n">{t.solved}</span>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
 
     <p class="foot">
       Updated {shortDate(updated)}, every day. <NewTabLink href={profile}>{data.username} on LeetCode</NewTabLink>
     </p>
   </div>
+  </div>
 </section>
 
 <style>
+  /*
+   * The rehearsal room's chalkboard: slate with the ghosts of old workings rubbed into it, and the
+   * numbers chalked up in white, yellow, blue and pink. Its own palette in either house light.
+   */
   .rehearsal {
-    padding-block: 88px 40px;
+    --text: #eceee6;
+    --muted: #b8c4bd;
+    --brass: #f2dc7a;
+    --brass-hi: #f8e9a6;
+    --marquee: #f2a0b5;
+    --chalk-blue: #a9d4e6;
+    --line: rgba(236, 238, 230, 0.28);
+    --bg: #1e2724;
+    position: relative;
+    isolation: isolate;
+    color: var(--text);
+    color-scheme: dark;
+    /* Old workings rubbed out with the duster: wide, faint swirls of chalk. */
+    background:
+      radial-gradient(ellipse 34% 18% at 22% 30%, rgba(236, 238, 230, 0.07), transparent 70%),
+      radial-gradient(ellipse 26% 14% at 78% 22%, rgba(236, 238, 230, 0.06), transparent 70%),
+      radial-gradient(ellipse 40% 16% at 60% 78%, rgba(236, 238, 230, 0.06), transparent 70%),
+      radial-gradient(ellipse 20% 22% at 10% 85%, rgba(236, 238, 230, 0.05), transparent 70%),
+      linear-gradient(172deg, transparent 40%, rgba(236, 238, 230, 0.035) 48%, transparent 56%),
+      var(--dust) 0 0 / 180px 180px,
+      #1e2724;
+  }
+
+  .defs {
+    position: absolute;
+  }
+
+  .rehearsal .section-head::before {
+    display: none;
+  }
+
+  /* Chalk lettering: a soft edge on the headline. */
+  .rehearsal :global(.section-head h2) {
+    text-shadow:
+      0 0 1px rgba(236, 238, 230, 0.8),
+      0 0 12px rgba(236, 238, 230, 0.12);
+  }
+
+  .board {
+    padding-block: 96px 136px;
   }
 
   .log {
@@ -118,10 +176,8 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
     grid-template-areas:
       'tally calendar'
-      'recent topics'
       'foot foot';
-    gap: 28px 48px;
-    padding: 28px 32px;
+    gap: 28px 64px;
   }
 
   .tally {
@@ -134,19 +190,11 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
     min-width: 0;
   }
 
-  .recent {
-    grid-area: recent;
-  }
-
-  .topics {
-    grid-area: topics;
-  }
-
   .foot {
     grid-area: foot;
     margin: 0;
     padding-top: 16px;
-    border-top: 1px solid var(--line);
+    border-top: 2px dashed var(--line);
     color: var(--muted);
     font-size: 15px;
   }
@@ -181,10 +229,12 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
   .seg {
     min-width: 6px;
     border-radius: 3px;
+    filter: url(#chalk);
+    opacity: 0.92;
   }
 
   .seg--easy {
-    background: var(--chip);
+    background: var(--chalk-blue);
   }
 
   .seg--medium {
@@ -277,24 +327,57 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
     border-radius: 2px;
   }
 
+  /* Chalked squares: an outline for a quiet day, then heavier yellow chalk for busier ones. */
   .l0 {
-    background: color-mix(in srgb, var(--text) 9%, transparent);
+    box-shadow: inset 0 0 0 1px rgba(236, 238, 230, 0.16);
   }
 
   .l1 {
-    background: color-mix(in srgb, var(--brass) 35%, var(--surface));
+    background: color-mix(in srgb, var(--brass) 30%, transparent);
   }
 
   .l2 {
-    background: color-mix(in srgb, var(--brass) 60%, var(--surface));
+    background: color-mix(in srgb, var(--brass) 55%, transparent);
   }
 
   .l3 {
-    background: color-mix(in srgb, var(--brass) 82%, var(--surface));
+    background: color-mix(in srgb, var(--brass) 80%, transparent);
   }
 
   .l4 {
     background: var(--brass-hi);
+  }
+
+  /* The tally of the longest run. */
+  .run {
+    margin: 28px 0 0;
+  }
+
+  .marks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+  }
+
+  .marks svg {
+    width: 40px;
+    height: 38px;
+    overflow: visible;
+  }
+
+  .marks path {
+    fill: none;
+    stroke: var(--text);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    opacity: 0.9;
+    filter: url(#chalk);
+  }
+
+  .run figcaption {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 16px;
   }
 
   .empty {
@@ -311,42 +394,10 @@ const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
     color: var(--muted);
   }
 
-  h3.eyebrow {
-    margin-bottom: 10px;
-  }
-
-  .recent ol {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .recent li {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    padding-block: 6px;
-    border-bottom: 1px dashed var(--line);
-    font-size: 16px;
-  }
-
-  .when {
-    flex: none;
-    color: var(--muted);
-    font-size: 14px;
-  }
-
-  .topics .n {
-    margin-left: 4px;
-    color: var(--brass);
-    font-weight: 700;
-  }
-
   @media (max-width: 860px) {
     .log {
       grid-template-columns: minmax(0, 1fr);
-      grid-template-areas: 'tally' 'calendar' 'recent' 'topics' 'foot';
-      padding: 22px 18px;
+      grid-template-areas: 'tally' 'calendar' 'foot';
     }
   }
 </style>

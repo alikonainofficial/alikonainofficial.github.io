@@ -1,20 +1,33 @@
 ---
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
+import { grain, styleVars } from '../lib/textures';
+
+// The evidence board: cork, two grains of it.
+const cork = styleVars({
+  '--cork-dark': grain({ frequency: 0.24, octaves: 3, tone: 'dark', amount: 0.42, seed: 3 }),
+  '--cork-light': grain({ frequency: 0.32, octaves: 2, tone: 'light', amount: 0.05, seed: 11 }),
+});
+// A slight, fixed tilt for each pinned file, so the board looks pinned by hand.
+const TILTS = [-1.4, 1.1, 0.9, -1.2];
 
 const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
 ---
 
-<section id="work" class="work wrap" aria-labelledby="work-title">
-  <div class="section-head gel-amber">
+<section id="work" class="work" aria-labelledby="work-title" style={cork}>
+  <div class="wrap board">
+  <div class="section-head gel-amber" data-rise>
     <h2 id="work-title" class="display">The work</h2>
     <p>Four case files. Take your time choosing. I'll be watching which one you keep coming back to.</p>
   </div>
 
+  <div class="pinned" data-board>
+  <svg class="string" aria-hidden="true" data-string><path pathLength="1" /><path pathLength="1" /></svg>
   <ul class="cards">
     {
-      work.map((entry) => (
-        <li class="card panel" data-card={entry.id} data-dwell={entry.data.label}>
+      work.map((entry, i) => (
+        <li class="card" data-card={entry.id} data-dwell={entry.data.label} data-rise style={`--rise-i:${i % 2};--tilt:${TILTS[i % TILTS.length]}deg`}>
+          <span class="pin" aria-hidden="true" data-pin />
           <Image
             src={entry.data.cover}
             alt={entry.data.coverAlt}
@@ -39,6 +52,8 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
       ))
     }
   </ul>
+  </div>
+  </div>
 </section>
 
 <script>
@@ -74,6 +89,31 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
     true,
   );
 
+  // The red string runs between the pins of files that sit side by side. It is drawn over the
+  // photos at the top of the files, never across the writing, and left out when they stack in one column.
+  function stringUp(board: HTMLElement) {
+    const svg = board.querySelector<SVGSVGElement>('[data-string]');
+    if (!svg) return;
+    const box = board.getBoundingClientRect();
+    const pins = [...board.querySelectorAll<HTMLElement>('[data-pin]')].map((p) => {
+      const r = p.getBoundingClientRect();
+      return { x: r.left + r.width / 2 - box.left, y: r.top + r.height / 2 - box.top };
+    });
+    svg.setAttribute('viewBox', `0 0 ${box.width} ${box.height}`);
+    const paths = [...svg.querySelectorAll('path')];
+    paths.forEach((path, row) => {
+      const a = pins[row * 2];
+      const b = pins[row * 2 + 1];
+      const sideBySide = a && b && Math.abs(a.y - b.y) < 40;
+      path.setAttribute('d', sideBySide ? `M${a.x} ${a.y} Q${(a.x + b.x) / 2} ${Math.max(a.y, b.y) + 46} ${b.x} ${b.y}` : '');
+    });
+  }
+  const boards = new ResizeObserver((entries) => entries.forEach((e) => stringUp(e.target as HTMLElement)));
+  document.addEventListener('astro:page-load', () => {
+    boards.disconnect();
+    document.querySelectorAll<HTMLElement>('[data-board]').forEach((b) => boards.observe(b));
+  });
+
   // Whatever the device, remember what happened before the pick, for the case page to reveal.
   document.addEventListener('click', (e) => {
     const link = e.target instanceof Element ? e.target.closest<HTMLElement>('[data-card-link]') : null;
@@ -86,8 +126,44 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
 </script>
 
 <style>
+  /*
+   * The evidence board: a cork wall under a desk lamp, with the four case files pinned to it and
+   * red string between them. A world of its own, so it keeps its palette in either house light.
+   */
   .work {
-    padding-block: 72px 88px;
+    --text: #f4ead8;
+    --muted: #ecdcbf;
+    --brass: #f0c879;
+    --brass-hi: #f7dca3;
+    --bg: #2a1c11;
+    --paper: #efe2c3;
+    --paper-ink: #2b2218;
+    --paper-muted: #6a5539;
+    --string: #a3262b;
+    --gel: rgba(255, 214, 140, 0.34);
+    position: relative;
+    isolation: isolate;
+    color: var(--text);
+    color-scheme: dark;
+    background:
+      radial-gradient(ellipse 60% 46% at 50% 4%, rgba(255, 205, 130, 0.26), transparent 72%),
+      radial-gradient(ellipse 90% 80% at 50% 50%, transparent 40%, rgba(20, 12, 6, 0.7) 100%),
+      var(--cork-light) 0 0 / 220px 220px,
+      var(--cork-dark) 0 0 / 220px 220px,
+      #5a3c24;
+  }
+
+  .board {
+    padding-block: 72px 136px;
+  }
+
+  /* Lettering straight on the cork needs a little lift off the grain. */
+  .board > :global(.section-head) {
+    text-shadow: 0 1px 3px rgba(20, 12, 6, 0.85);
+  }
+
+  .pinned {
+    position: relative;
   }
 
   .cards {
@@ -96,32 +172,65 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
     list-style: none;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr));
-    gap: 22px;
+    gap: 44px 40px;
   }
 
+  /* A manila case file, pinned at a slight angle. It straightens up when you reach for it. */
   .card {
     position: relative;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    padding: 14px 14px 0;
+    border-radius: 3px;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.18), transparent 30%),
+      var(--paper);
+    color: var(--paper-ink);
+    rotate: var(--tilt, 0deg);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.4) inset,
+      2px 14px 26px rgba(14, 8, 3, 0.55),
+      0 2px 4px rgba(14, 8, 3, 0.4);
     transition:
-      transform 220ms ease,
-      box-shadow 220ms ease;
+      rotate 260ms ease,
+      transform 260ms ease,
+      box-shadow 260ms ease;
   }
 
   .card:hover,
   .card:focus-within {
+    rotate: 0deg;
     transform: translateY(-4px);
-    box-shadow: 0 22px 44px var(--shadow);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.4) inset,
+      4px 26px 40px rgba(14, 8, 3, 0.6),
+      0 2px 4px rgba(14, 8, 3, 0.4);
   }
 
+  /* A brass map pin through the top of the file. */
+  .pin {
+    position: absolute;
+    z-index: 3;
+    top: -9px;
+    left: 50%;
+    width: 22px;
+    height: 22px;
+    translate: -50% 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 32%, #fff4d6 0 12%, #e6b45c 30%, #a8711f 72%, #6f4510 100%);
+    box-shadow: 3px 5px 5px rgba(20, 10, 2, 0.55);
+  }
+
+  /* The photo, clipped to the front of the file. */
   .card :global(.cover) {
     width: 100%;
     height: auto;
     aspect-ratio: 16 / 9;
     object-fit: cover;
     object-position: top left;
-    background: var(--bg-deep);
+    border-radius: 2px;
+    background: #1b140d;
+    box-shadow: 0 2px 6px rgba(40, 24, 8, 0.35);
   }
 
   .card-body {
@@ -129,19 +238,20 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 24px 28px 26px;
+    padding: 22px 14px 22px;
   }
 
   .meta {
     margin: 0;
     font-size: 15px;
-    color: var(--muted);
+    color: var(--paper-muted);
   }
 
   h3 {
     margin: 0;
     font-size: 32px;
     line-height: 1.1;
+    color: var(--paper-ink);
   }
 
   .summary {
@@ -153,7 +263,7 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
     min-height: 0;
     font-family: var(--font-display);
     font-style: italic;
-    color: var(--rose);
+    color: var(--string);
   }
 
   .tell:empty {
@@ -179,7 +289,13 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
     align-items: center;
     min-height: 44px;
     font-weight: 700;
+    color: var(--string);
     text-decoration: none;
+  }
+
+  .card-link:hover {
+    color: #7d1a1e;
+    text-decoration: underline;
   }
 
   /* The whole card opens the case file. */
@@ -196,10 +312,58 @@ const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.
 
   .card:has(.card-link:focus-visible) {
     outline: 3px solid var(--brass);
-    outline-offset: 3px;
+    outline-offset: 4px;
   }
 
-  .card-link:hover {
-    text-decoration: underline;
+  /* The red string, over the photos and under the pins. */
+  .string {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .string path {
+    fill: none;
+    stroke: var(--string);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    filter: drop-shadow(2px 5px 2px rgba(20, 8, 2, 0.5));
+  }
+
+  /* The string pulls across as the board scrolls into view. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .string path {
+        stroke-dasharray: 1;
+        animation-name: string-across;
+        animation-timing-function: ease-out;
+        animation-fill-mode: both;
+        animation-timeline: view();
+        animation-range: entry 10% cover 40%;
+      }
+    }
+  }
+
+  @keyframes string-across {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .cards {
+      gap: 36px;
+    }
+
+    .card-body {
+      padding-inline: 8px;
+    }
   }
 </style>

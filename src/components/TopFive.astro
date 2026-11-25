@@ -24,7 +24,7 @@ const imageFor = (slug: string) => Object.entries(files).find(([path]) => path.s
     items.map((item, i) => {
       const img = imageFor(item.slug);
       return (
-        <li class:list={['pick', { 'pick--lead': i === 0 }]}>
+        <li class:list={['pick', { 'pick--lead': i === 0 }]} data-rise style={`--rise-i:${i}`}>
           <div class="panel-frame">
             {img ? (
               <Picture

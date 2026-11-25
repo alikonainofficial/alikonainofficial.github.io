@@ -3,25 +3,26 @@ import Base from '../layouts/Base.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import Stage from '../components/Stage.astro';
 import Work from '../components/Work.astro';
+import Story from '../components/Story.astro';
 import EngineerTrick from '../components/EngineerTrick.astro';
 import RehearsalLog from '../components/RehearsalLog.astro';
-import Story from '../components/Story.astro';
 import LateShow from '../components/LateShow.astro';
 import PlayerOne from '../components/PlayerOne.astro';
 import Arcade from '../components/Arcade.astro';
 import AfterHours from '../components/AfterHours.astro';
 import Finale from '../components/Finale.astro';
 import SiteFooter from '../components/SiteFooter.astro';
+import { seamStyle } from '../lib/seams';
 ---
 
 <Base>
   <SiteHeader />
-  <main id="main">
+  <main id="main" data-worlds style={seamStyle()}>
     <Stage />
     <Work />
+    <Story />
     <EngineerTrick />
     <RehearsalLog />
-    <Story />
     <LateShow />
     <PlayerOne />
     <Arcade />

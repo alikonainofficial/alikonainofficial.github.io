@@ -18,7 +18,7 @@ export interface Act {
 export const ACTS: readonly Act[] = [
   { id: 'cold-read', numeral: 'I', name: 'The cold read', where: 'Opening act, top of the home page', href: '/#top' },
   { id: 'hover-tell', numeral: 'II', name: 'The hover tell', where: 'While you look through the work', href: '/#work' },
-  { id: 'engineer', numeral: 'III', name: "The engineer's trick", where: 'Right after the work', href: '/#engineer' },
+  { id: 'engineer', numeral: 'III', name: "The engineer's trick", where: 'After the set list', href: '/#engineer' },
   { id: 'vanish', numeral: 'IV', name: 'The vanishing card', where: 'Encore on a case file', href: '/work/ai-ad-pipeline/#encore-vanish' },
   { id: 'number', numeral: 'V', name: 'Think of a number', where: 'Encore on a case file', href: '/work/books-pipeline/#encore-number' },
   { id: 'eleven', numeral: 'VI', name: 'The 1089', where: 'Encore on a case file', href: '/work/booktok/#encore-eleven' },

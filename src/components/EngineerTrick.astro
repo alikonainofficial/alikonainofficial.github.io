@@ -1,13 +1,20 @@
 ---
 import { BITS, binaryCard } from '../lib/tricks';
+import { grain, styleVars } from '../lib/textures';
+
+const felt = styleVars({
+  '--felt-dark': grain({ frequency: 1.6, octaves: 1, tone: 'dark', amount: 0.32, size: 160, seed: 2 }),
+  '--felt-light': grain({ frequency: 1.3, octaves: 1, tone: 'light', amount: 0.05, size: 160, seed: 9 }),
+});
 
 const LETTERS = 'ABCDEF';
 const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!, numbers: binaryCard(bit) }));
 ---
 
-<section id="engineer" class="engineer" aria-labelledby="engineer-title" data-dwell="the engineer's trick">
+<section id="engineer" class="engineer" aria-labelledby="engineer-title" data-dwell="the engineer's trick" style={felt}>
+  <div class="lamp" aria-hidden="true"><span class="cord"></span><span class="shade"></span></div>
   <div class="wrap inner" data-engineer>
-    <div class="section-head gel-cyan">
+    <div class="section-head gel-cyan" data-rise>
       <h2 id="engineer-title" class="display">Think of a number from 1 to 63.</h2>
       <p>Keep it to yourself. Tick every card your number appears on, and I'll tell you what it is.</p>
     </div>
@@ -16,7 +23,7 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
       <legend class="visually-hidden">Which cards is your number on?</legend>
       {
         cards.map((c) => (
-          <label class="bcard">
+          <label class="bcard" data-rise style={`--rise-i:${c.bit}`}>
             <input class="visually-hidden" type="checkbox" value={c.bit} data-bit />
             <span class="bcard-head">
               <span class="bcard-name">Card {c.letter}</span>
@@ -32,7 +39,7 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
       }
     </fieldset>
 
-    <div class="controls">
+    <div class="controls" data-rise>
       <button class="btn btn--brass" type="button" data-read data-sfx="none">Read my mind</button>
       <button class="btn btn--line" type="button" data-again hidden>Try another number</button>
     </div>
@@ -100,12 +107,76 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
 </script>
 
 <style>
+  /*
+   * The card table: green baize under a low hanging lamp, the six cards dealt in its light.
+   * Its own palette in either house light.
+   */
   .engineer {
-    background: var(--bg-deep);
+    --text: #f3ecd8;
+    --muted: #bfd2c0;
+    --brass: #ecc678;
+    --brass-hi: #f5d99d;
+    --bg: #0b2a1e;
+    --card: #f3efe6;
+    --card-ink: #1d1d1f;
+    --shadow: rgba(2, 14, 9, 0.5);
+    position: relative;
+    isolation: isolate;
+    color: var(--text);
+    color-scheme: dark;
+    background:
+      radial-gradient(ellipse 46% 58% at 50% 8%, rgba(255, 226, 160, 0.3), rgba(255, 226, 160, 0.08) 55%, transparent 75%),
+      radial-gradient(ellipse 100% 90% at 50% 40%, transparent 45%, rgba(2, 16, 10, 0.75) 100%),
+      var(--felt-light) 0 0 / 160px 160px,
+      var(--felt-dark) 0 0 / 160px 160px,
+      #13503a;
+  }
+
+  .engineer .section-head::before {
+    display: none;
+  }
+
+  /* The lamp hangs over the middle of the table. */
+  .lamp {
+    position: absolute;
+    z-index: -1;
+    top: 0;
+    left: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    translate: -50% 0;
+    pointer-events: none;
+  }
+
+  /* The cord starts up in the seam, so the lamp hangs down out of the section above. */
+  .cord {
+    width: 2px;
+    height: calc(var(--seam) + 40px);
+    background: #050c08;
+  }
+
+  .shade {
+    position: relative;
+    width: 128px;
+    height: 44px;
+    clip-path: polygon(24% 0, 76% 0, 100% 100%, 0 100%);
+    background: linear-gradient(#1f2a22, #0d1510 85%, #c69a4a 85%, #e6bd6a);
+  }
+
+  .shade::after {
+    content: '';
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    bottom: 0;
+    height: 4px;
+    background: #fff4cf;
+    filter: blur(2px);
   }
 
   .inner {
-    padding-block: 88px;
+    padding-block: 140px 136px;
     display: flex;
     flex-direction: column;
     gap: 28px;
@@ -134,7 +205,9 @@ const cards = [...Array(BITS).keys()].map((bit) => ({ bit, letter: LETTERS[bit]!
     border-radius: 12px;
     background: var(--card);
     color: var(--card-ink);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.6) inset,
+      0 14px 26px rgba(2, 14, 9, 0.55);
     cursor: pointer;
     transition:
       transform 180ms ease,

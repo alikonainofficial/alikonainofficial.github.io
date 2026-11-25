@@ -2,13 +2,17 @@
 import { getCollection } from 'astro:content';
 import { person } from '../lib/profile';
 import NewTabLink from './NewTabLink.astro';
+import { grain, styleVars } from '../lib/textures';
+
+const velvet = styleVars({ '--nap': grain({ frequency: 1.2, octaves: 1, tone: 'dark', amount: 0.4, size: 160, seed: 6 }) });
 
 // How the prediction names each project mid-sentence.
 const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id, w.data.label]));
 ---
 
-<section id="finale" class="finale wrap" aria-labelledby="finale-title" data-finale data-labels={JSON.stringify(labels)}>
-  <div class="envelope-row">
+<section id="finale" class="finale" aria-labelledby="finale-title" style={velvet}>
+  <div class="wrap call" data-finale data-labels={JSON.stringify(labels)}>
+  <div class="envelope-row" data-rise>
     <button class="envelope" type="button" data-open aria-describedby="sealed-at" data-sfx="none">
       <span class="flap" aria-hidden="true"></span>
       <span class="seal" aria-hidden="true"></span>
@@ -27,7 +31,7 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
     <p class="progress" data-progress></p>
   </div>
 
-  <div class="contact">
+  <div class="contact" data-rise>
     <p class="display contact-line">For my last trick, I'll predict what you do next: you'll get in touch.</p>
     <div class="btn-row">
       <a class="btn btn--brass" href={`mailto:${person.email}`}>Email Ali</a>
@@ -35,6 +39,7 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
       <NewTabLink class="btn btn--line" href={person.github}>GitHub</NewTabLink>
       <a class="btn btn--line" href="/resume/">The plain résumé</a>
     </div>
+  </div>
   </div>
 </section>
 
@@ -104,8 +109,42 @@ const labels = Object.fromEntries((await getCollection('work')).map((w) => [w.id
 </script>
 
 <style>
+  /*
+   * The curtain call: the red velvet curtain behind the last trick, a coral spot on the envelope.
+   * Its own palette in either house light.
+   */
   .finale {
-    padding-block: 88px 72px;
+    --text: #f7ebde;
+    --muted: #e6c6bb;
+    --brass: #f0c878;
+    --brass-hi: #f8dca4;
+    --bg: #3a0910;
+    --surface: #4a0d16;
+    --line: rgba(247, 235, 222, 0.22);
+    --card: #f3efe6;
+    --marquee: #ff7a59;
+    --gel-coral: rgba(255, 140, 105, 0.42);
+    --shadow: rgba(18, 2, 5, 0.5);
+    position: relative;
+    isolation: isolate;
+    color: var(--text);
+    color-scheme: dark;
+    background:
+      radial-gradient(ellipse 80% 70% at 50% 45%, transparent 35%, rgba(18, 2, 5, 0.75) 100%),
+      var(--nap) 0 0 / 160px 160px,
+      repeating-linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.32) 0 14px,
+        rgba(0, 0, 0, 0.08) 22px,
+        rgba(255, 190, 180, 0.07) 34px,
+        rgba(0, 0, 0, 0.08) 46px,
+        rgba(0, 0, 0, 0.32) 60px
+      ),
+      linear-gradient(#5e1019, #45090f);
+  }
+
+  .call {
+    padding-block: 112px 136px;
     display: flex;
     flex-direction: column;
     gap: 32px;

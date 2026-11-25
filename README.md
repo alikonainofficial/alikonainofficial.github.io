@@ -12,7 +12,7 @@ Eight tricks are spread across the site, so no single page does all of them. A p
 | --- | --- | --- |
 | I | The cold read | Top of the home page |
 | II | The hover tell | The work cards, paid off on the case page you open |
-| III | The engineer's trick (binary cards) | Home, after the work |
+| III | The engineer's trick (binary cards) | Home, after the set list |
 | IV | The vanishing card | Encore on a case page |
 | V | Think of a number | Encore on a case page |
 | VI | The 1089 | Encore on a case page |
@@ -87,7 +87,8 @@ npm run build    # type check, then build to dist/
 
 ```
 src/
-  components/   Stage, ColdRead, Work, EngineerTrick, Story, Arcade, Finale, Encore,
+  components/   Stage, ColdRead, Work, Story, EngineerTrick, RehearsalLog, LateShow,
+                PlayerOne, Arcade, AfterHours, Finale, Encore,
                 ProgramWidget, SoundToggle, LightsToggle, SiteScripts, header and footer
   content/work/ one Markdown case file per project
   lib/          profile data, sprites, audio, the card burst, trick logic and tests
