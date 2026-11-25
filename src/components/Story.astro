@@ -1,6 +1,5 @@
 ---
 import { acts, education, timeInProduction } from '../lib/profile';
-import Avatar from './Avatar.astro';
 
 const { years } = timeInProduction();
 ---
@@ -40,33 +39,11 @@ const { years } = timeInProduction();
     </p>
   </div>
 
-  <aside class="offstage panel" aria-labelledby="offstage-title">
-    <div class="offstage-head">
-      <Avatar scale={3} label="" class="offstage-avatar" />
-      <h2 id="offstage-title" class="display">Between sets</h2>
-    </div>
-    <ul>
-      <li>280+ anime and 35+ manga. <a href="#late-show">My top five</a> are on at the late show.</li>
-      <li>Pokémon, Halo and God of War, on repeat. <a href="#player-one">My top five</a> are on the shelf.</li>
-      <li>The gym every day, and the Z1000 at night. <a href="#after-hours">Press start on both.</a></li>
-      <li>Cooking for a cat who never says thanks.</li>
-      <li>A beginner's interest in mentalism and hypnosis, which explains tonight's program.</li>
-    </ul>
-  </aside>
 </section>
 
 <style>
   .story {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: 40px 56px;
     padding-block: 88px;
-  }
-
-  .setlist {
-    flex: 2 1 560px;
-    min-width: 0;
   }
 
   .sets {
@@ -112,34 +89,6 @@ const { years } = timeInProduction();
     font-size: 16px;
   }
 
-  .offstage {
-    flex: 1 1 320px;
-    padding: 28px;
-  }
-
-  .offstage-head {
-    display: flex;
-    align-items: flex-end;
-    gap: 16px;
-    margin-bottom: 18px;
-  }
-
-  .offstage h2 {
-    margin: 0 0 6px;
-    font-size: 36px;
-  }
-
-  .offstage ul {
-    margin: 0;
-    padding-left: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .offstage li::marker {
-    color: var(--brass);
-  }
 
   @media (max-width: 640px) {
     .set {
